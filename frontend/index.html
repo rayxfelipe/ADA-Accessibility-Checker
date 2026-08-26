@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ADA Accessibility Checker</title>
+  <meta name="description" content="Upload a PDF and get an AI-powered ADA/WCAG accessibility audit." />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header class="app-header">
+    <div class="container">
+      <h1>ADA Accessibility Checker</h1>
+      <p class="tagline">AI-powered PDF audits for ADA &amp; WCAG accessibility compliance</p>
+    </div>
+  </header>
+
+  <main id="main-content" class="container">
+    <section class="upload-card" aria-labelledby="upload-heading">
+      <h2 id="upload-heading">Upload a PDF document</h2>
+      <p class="hint">Your document is analyzed by the ADAAccessibilityCheckerAgent for accessibility issues.</p>
+
+      <form id="audit-form" novalidate>
+        <div
+          id="dropzone"
+          class="dropzone"
+          tabindex="0"
+          role="button"
+          aria-describedby="dropzone-hint"
+        >
+          <input
+            type="file"
+            id="file-input"
+            name="file"
+            accept="application/pdf,.pdf"
+            aria-label="Choose a PDF file to audit"
+          />
+          <p id="dropzone-hint">
+            Drag &amp; drop a PDF here, or <span class="link-text">browse files</span>
+          </p>
+          <p id="file-name" class="file-name" aria-live="polite"></p>
+        </div>
+
+        <button type="submit" id="submit-btn" class="primary-btn" disabled>
+          Run Accessibility Audit
+        </button>
+      </form>
+
+      <p id="error-message" class="error-message" role="alert" hidden></p>
+    </section>
+
+    <section id="status-section" class="status-card" hidden aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
+      <p>Auditing document&hellip; this may take a moment.</p>
+    </section>
+
+    <section id="results-section" class="results-card" hidden aria-labelledby="results-heading">
+      <div class="results-header">
+        <h2 id="results-heading">Audit Report</h2>
+        <button type="button" id="copy-btn" class="secondary-btn">Copy report</button>
+      </div>
+      <p id="results-filename" class="results-filename"></p>
+      <div id="report-output" class="report-output"></div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <div class="container">
+      <p>Powered by a Microsoft Foundry agent &mdash; ADAAccessibilityCheckerAgent</p>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
