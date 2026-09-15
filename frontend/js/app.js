@@ -7,7 +7,6 @@
   const errorMessageEl = document.getElementById("error-message");
   const statusSection = document.getElementById("status-section");
   const resultsSection = document.getElementById("results-section");
-  const resultsFilenameEl = document.getElementById("results-filename");
   const reportOutputEl = document.getElementById("report-output");
   const copyBtn = document.getElementById("copy-btn");
 
@@ -73,28 +72,60 @@
     setSelectedFile(file);
   });
 
-  // Minimal, safe markdown-ish renderer: escapes HTML first, then applies a
-  // small set of formatting rules so the agent's response reads well.
+  // Render only the Markdown constructs allowed by the audit report contract.
   function renderReport(text) {
     const escapeHtml = (value) =>
       value
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 
-    const escaped = escapeHtml(text);
-    const lines = escaped.split("\n");
+    const parseTableRow = (line) => {
+      const content = line.replace(/^\s*\|/, "").replace(/\|\s*$/, "");
+      const cells = [];
+      let cell = "";
+
+      for (let index = 0; index < content.length; index += 1) {
+        if (content[index] === "\\" && content[index + 1] === "|") {
+          cell += "|";
+          index += 1;
+        } else if (content[index] === "|") {
+          cells.push(cell.trim());
+          cell = "";
+        } else {
+          cell += content[index];
+        }
+      }
+      cells.push(cell.trim());
+      return cells;
+    };
+
+    const isTableDivider = (line) =>
+      /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line);
+
+    const lines = text.split("\n");
     const html = [];
-    let inList = false;
+    let listType = null;
 
     const closeList = () => {
-      if (inList) {
-        html.push("</ul>");
-        inList = false;
+      if (listType) {
+        html.push(`</${listType}>`);
+        listType = null;
       }
     };
 
-    for (const rawLine of lines) {
+    const openList = (type, className = "") => {
+      if (listType !== type) {
+        closeList();
+        html.push(`<${type}${className ? ` class="${className}"` : ""}>`);
+        listType = type;
+      }
+    };
+
+    for (let index = 0; index < lines.length; index += 1) {
+      const rawLine = lines[index];
       const line = rawLine.trim();
 
       if (!line) {
@@ -102,26 +133,87 @@
         continue;
       }
 
+      if (line.startsWith("|") && isTableDivider(lines[index + 1] || "")) {
+        closeList();
+        const headers = parseTableRow(line);
+        index += 2;
+        const rows = [];
+        while (index < lines.length && lines[index].trim().startsWith("|")) {
+          rows.push(parseTableRow(lines[index]));
+          index += 1;
+        }
+        index -= 1;
+
+        html.push('<div class="report-table"><table><thead><tr>');
+        headers.forEach((header) => {
+          html.push(`<th scope="col">${formatInline(escapeHtml(header))}</th>`);
+        });
+        html.push("</tr></thead><tbody>");
+        rows.forEach((row) => {
+          html.push("<tr>");
+          headers.forEach((header, cellIndex) => {
+            html.push(
+              `<td data-label="${escapeHtml(header)}">${formatInline(
+                escapeHtml(row[cellIndex] || "")
+              )}</td>`
+            );
+          });
+          html.push("</tr>");
+        });
+        html.push("</tbody></table></div>");
+        continue;
+      }
+
       const headingMatch = line.match(/^(#{1,3})\s+(.*)/);
       if (headingMatch) {
         closeList();
-        const level = headingMatch[1].length + 2; // start at h3
-        html.push(`<h${level}>${formatInline(headingMatch[2])}</h${level}>`);
+        const level = Math.min(headingMatch[1].length + 1, 4);
+        html.push(
+          `<h${level}>${formatInline(escapeHtml(headingMatch[2]))}</h${level}>`
+        );
+        continue;
+      }
+
+      if (/^(?:-{3,}|\*{3,}|_{3,})$/.test(line)) {
+        closeList();
+        html.push("<hr>");
+        continue;
+      }
+
+      const blockquoteMatch = line.match(/^>\s?(.*)/);
+      if (blockquoteMatch) {
+        closeList();
+        html.push(`<blockquote>${formatInline(escapeHtml(blockquoteMatch[1]))}</blockquote>`);
+        continue;
+      }
+
+      const checkboxMatch = line.match(/^[-*]\s+\[([ xX])\]\s+(.*)/);
+      if (checkboxMatch) {
+        openList("ul", "report-checklist");
+        const checked = checkboxMatch[1].toLowerCase() === "x";
+        html.push(
+          `<li><input type="checkbox" disabled${checked ? " checked" : ""}>` +
+            `<span>${formatInline(escapeHtml(checkboxMatch[2]))}</span></li>`
+        );
         continue;
       }
 
       const listMatch = line.match(/^[-*]\s+(.*)/);
       if (listMatch) {
-        if (!inList) {
-          html.push("<ul>");
-          inList = true;
-        }
-        html.push(`<li>${formatInline(listMatch[1])}</li>`);
+        openList("ul");
+        html.push(`<li>${formatInline(escapeHtml(listMatch[1]))}</li>`);
+        continue;
+      }
+
+      const orderedMatch = line.match(/^\d+[.)]\s+(.*)/);
+      if (orderedMatch) {
+        openList("ol");
+        html.push(`<li>${formatInline(escapeHtml(orderedMatch[1]))}</li>`);
         continue;
       }
 
       closeList();
-      html.push(`<p>${formatInline(line)}</p>`);
+      html.push(`<p>${formatInline(escapeHtml(line))}</p>`);
     }
     closeList();
 
@@ -133,38 +225,24 @@
       .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
       .replace(/`([^`]+)`/g, "<code>$1</code>");
 
-    result = result.replace(/\b(Critical|Serious|Moderate|Minor)\b/g, (match) => {
-      return `<span class="severity-${match.toLowerCase()}">${match}</span>`;
+    result = result.replace(
+      /\b(Needs Human Review|Critical|Serious|High|Moderate|Medium|Minor|Low)\b/g,
+      (match) => {
+        const severityClass = match.toLowerCase().replaceAll(" ", "-");
+        return `<span class="severity-${severityClass}">${match}</span>`;
+      }
+    );
+
+    result = result.replace(/\b(PASS|PARTIAL|FAIL)\b/g, (match) => {
+      return `<span class="compliance-${match.toLowerCase()}">${match}</span>`;
     });
+
+    result = result.replace(
+      /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,
+      '<a href="$2">$1</a>'
+    );
 
     return result;
-  }
-
-  function updateDashboardSummary(text) {
-    const severities = ["critical", "serious", "moderate", "minor"];
-    const counts = Object.fromEntries(severities.map((severity) => [severity, 0]));
-
-    text.split("\n").forEach((line) => {
-      const severity = severities.find((item) =>
-        new RegExp(`\\b${item}\\b`, "i").test(line)
-      );
-      if (severity) counts[severity] += 1;
-    });
-
-    severities.forEach((severity) => {
-      document.getElementById(`${severity}-count`).textContent = counts[severity];
-    });
-
-    const statusEl = document.getElementById("report-status");
-    const statusHeading = statusEl.querySelector("strong");
-    const statusDetail = statusEl.querySelector("span");
-    if (counts.critical > 0 || counts.serious > 0) {
-      statusHeading.textContent = "Remediation required";
-      statusDetail.textContent = "Critical or serious accessibility barriers identified";
-    } else {
-      statusHeading.textContent = "Review complete";
-      statusDetail.textContent = "Manual verification may still be required";
-    }
   }
 
   form.addEventListener("submit", async (event) => {
@@ -192,9 +270,8 @@
       }
 
       lastReportText = data.report || "";
-      resultsFilenameEl.textContent = `Document: ${data.filename}`;
       reportOutputEl.innerHTML = renderReport(lastReportText);
-      updateDashboardSummary(lastReportText);
+      statusSection.hidden = true;
       resultsSection.hidden = false;
     } catch (error) {
       showError(error.message || "Something went wrong while auditing the document.");
