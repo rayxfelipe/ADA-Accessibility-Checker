@@ -56,13 +56,56 @@
       <p>Auditing document&hellip; this may take a moment.</p>
     </section>
 
-    <section id="results-section" class="results-card" hidden aria-labelledby="results-heading">
-      <div class="results-header">
-        <h2 id="results-heading">Audit Report</h2>
-        <button type="button" id="copy-btn" class="secondary-btn">Copy report</button>
+    <section id="results-section" class="audit-dashboard" hidden aria-labelledby="results-heading">
+      <header class="report-hero">
+        <div>
+          <p class="report-eyebrow">Digital Accessibility Assessment</p>
+          <h2 id="results-heading">Accessibility Audit Report</h2>
+          <p id="results-filename" class="results-filename"></p>
+        </div>
+        <div id="report-status" class="report-status" role="status">
+          <strong>Review complete</strong>
+          <span>Manual verification may still be required</span>
+        </div>
+      </header>
+
+      <nav class="report-nav" aria-label="Audit report sections">
+        <a href="#report-overview">Overview</a>
+        <a href="#report-findings">Findings</a>
+        <a href="#report-actions">Actions</a>
+      </nav>
+
+      <div class="report-content">
+        <section id="report-overview" class="report-section" aria-labelledby="report-overview-heading">
+          <h3 id="report-overview-heading">Executive dashboard</h3>
+          <div class="report-kpis" aria-label="Finding severity summary">
+            <article class="report-card report-kpi critical"><strong id="critical-count">0</strong><span>Critical</span></article>
+            <article class="report-card report-kpi serious"><strong id="serious-count">0</strong><span>Serious</span></article>
+            <article class="report-card report-kpi moderate"><strong id="moderate-count">0</strong><span>Moderate</span></article>
+            <article class="report-card report-kpi minor"><strong id="minor-count">0</strong><span>Minor</span></article>
+          </div>
+        </section>
+
+        <section id="report-findings" class="report-section" aria-labelledby="report-findings-heading">
+          <div class="section-heading">
+            <h3 id="report-findings-heading">Audit findings</h3>
+            <button type="button" id="copy-btn" class="secondary-btn">Copy report</button>
+          </div>
+          <article class="report-card">
+            <div id="report-output" class="report-output"></div>
+          </article>
+        </section>
+
+        <section id="report-actions" class="report-section" aria-labelledby="report-actions-heading">
+          <h3 id="report-actions-heading">Immediate actions</h3>
+          <div class="report-alert">
+            Address critical and serious findings first, then verify the remediated document with assistive technology and keyboard testing.
+          </div>
+          <div class="report-actions">
+            <button type="button" class="primary-btn" onclick="window.print()">Print or save as PDF</button>
+          </div>
+        </section>
       </div>
-      <p id="results-filename" class="results-filename"></p>
-      <div id="report-output" class="report-output"></div>
     </section>
   </main>
 

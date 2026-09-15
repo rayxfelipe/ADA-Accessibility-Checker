@@ -241,6 +241,237 @@ button:focus-visible {
   color: #1f5c31;
 }
 
+.audit-dashboard {
+  width: min(1400px, calc(100vw - 3rem));
+  margin: 2rem 0 0 50%;
+  transform: translateX(-50%);
+  overflow: hidden;
+  background: #f4f7fb;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  color: #172b4d;
+  box-shadow: 0 8px 28px rgb(16 42 67 / 10%);
+}
+
+.report-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1.5rem;
+  align-items: start;
+  padding: 2rem clamp(1.25rem, 4vw, 3.5rem);
+  color: #fff;
+  background: linear-gradient(115deg, #0d2740, #164f80);
+}
+.report-hero h2 {
+  margin: 0.3rem 0 0.4rem;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  line-height: 1.1;
+}
+.report-eyebrow {
+  margin: 0;
+  color: #b9d9ff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.report-hero .results-filename {
+  margin: 0;
+  color: #e3efff;
+}
+.report-status {
+  min-width: 260px;
+  padding: 1rem 1.1rem;
+  color: #8c1d13;
+  background: #fff;
+  border-left: 6px solid #b42318;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(0 26 51 / 25%);
+}
+.report-status strong,
+.report-status span {
+  display: block;
+}
+.report-status span {
+  margin-top: 0.15rem;
+  color: #455566;
+  font-size: 0.9rem;
+}
+
+.report-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding: 0 clamp(1.25rem, 4vw, 3.5rem);
+  white-space: nowrap;
+  background: #fff;
+  border-bottom: 1px solid #d8e0ea;
+}
+.report-nav a {
+  padding: 0.85rem 0.75rem;
+  color: #334e68;
+  font-weight: 650;
+  text-decoration: none;
+}
+.report-nav a:hover {
+  background: #eaf2ff;
+}
+
+.report-content {
+  padding: 0 clamp(1.25rem, 4vw, 3.5rem) 3rem;
+}
+.report-section {
+  margin-top: 1.75rem;
+  scroll-margin-top: 4rem;
+}
+.report-section > h3,
+.section-heading h3 {
+  margin: 0 0 0.85rem;
+  color: #172b4d;
+  font-size: 1.45rem;
+}
+.report-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+.report-card {
+  padding: 1.25rem;
+  background: #fff;
+  border: 1px solid #d8e0ea;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgb(22 50 79 / 5%);
+}
+.report-kpi {
+  border-top-width: 5px;
+}
+.report-kpi.critical {
+  border-top-color: #b42318;
+}
+.report-kpi.serious {
+  border-top-color: #d97706;
+}
+.report-kpi.moderate {
+  border-top-color: #1463ff;
+}
+.report-kpi.minor {
+  border-top-color: #067647;
+}
+.report-kpi strong,
+.report-kpi span {
+  display: block;
+}
+.report-kpi strong {
+  font-size: 2rem;
+  line-height: 1.1;
+}
+.report-kpi span {
+  margin-top: 0.25rem;
+  color: #5f6c7b;
+  font-weight: 650;
+}
+.section-heading {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+}
+.section-heading h3 {
+  margin-bottom: 0;
+}
+.report-output {
+  margin-top: 0;
+}
+.report-output > :first-child {
+  margin-top: 0;
+}
+.report-output > :last-child {
+  margin-bottom: 0;
+}
+.report-alert {
+  padding: 1rem 1.1rem;
+  background: #fff1f0;
+  border-left: 6px solid #b42318;
+  border-radius: 8px;
+  font-weight: 600;
+}
+.report-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.report-actions .primary-btn {
+  margin-top: 0;
+  background: #1463ff;
+}
+
+@media (max-width: 760px) {
+  .report-hero {
+    grid-template-columns: 1fr;
+  }
+  .report-status {
+    min-width: 0;
+  }
+  .report-kpis {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .audit-dashboard {
+    width: calc(100vw - 1rem);
+  }
+  .report-kpis {
+    grid-template-columns: 1fr;
+  }
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media print {
+  .app-header,
+  .upload-card,
+  .status-card,
+  .report-nav,
+  .section-heading .secondary-btn,
+  .report-actions,
+  .app-footer,
+  .skip-link {
+    display: none !important;
+  }
+  main.container {
+    max-width: none;
+    padding: 0;
+  }
+  .audit-dashboard {
+    width: 100%;
+    margin: 0;
+    transform: none;
+    border: 0;
+    box-shadow: none;
+  }
+  .report-hero {
+    padding: 1rem 0;
+    color: #000;
+    background: #fff;
+    border-bottom: 2px solid #000;
+  }
+  .report-eyebrow,
+  .report-hero .results-filename {
+    color: #333;
+  }
+  .report-card {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+}
+
 .app-footer {
   padding: 1.5rem 0 2.5rem;
   color: var(--color-muted);

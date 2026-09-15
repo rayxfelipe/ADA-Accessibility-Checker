@@ -140,6 +140,33 @@
     return result;
   }
 
+  function updateDashboardSummary(text) {
+    const severities = ["critical", "serious", "moderate", "minor"];
+    const counts = Object.fromEntries(severities.map((severity) => [severity, 0]));
+
+    text.split("\n").forEach((line) => {
+      const severity = severities.find((item) =>
+        new RegExp(`\\b${item}\\b`, "i").test(line)
+      );
+      if (severity) counts[severity] += 1;
+    });
+
+    severities.forEach((severity) => {
+      document.getElementById(`${severity}-count`).textContent = counts[severity];
+    });
+
+    const statusEl = document.getElementById("report-status");
+    const statusHeading = statusEl.querySelector("strong");
+    const statusDetail = statusEl.querySelector("span");
+    if (counts.critical > 0 || counts.serious > 0) {
+      statusHeading.textContent = "Remediation required";
+      statusDetail.textContent = "Critical or serious accessibility barriers identified";
+    } else {
+      statusHeading.textContent = "Review complete";
+      statusDetail.textContent = "Manual verification may still be required";
+    }
+  }
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!selectedFile) return;
@@ -167,6 +194,7 @@
       lastReportText = data.report || "";
       resultsFilenameEl.textContent = `Document: ${data.filename}`;
       reportOutputEl.innerHTML = renderReport(lastReportText);
+      updateDashboardSummary(lastReportText);
       resultsSection.hidden = false;
     } catch (error) {
       showError(error.message || "Something went wrong while auditing the document.");
