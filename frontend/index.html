@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ADA Accessibility Checker</title>
   <meta name="description" content="Upload a PDF and get an AI-powered ADA/WCAG accessibility audit." />
-  <link rel="stylesheet" href="/css/styles.css?v=3" />
+  <link rel="stylesheet" href="/css/styles.css?v=6" />
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -55,19 +55,52 @@
       <div class="spinner" aria-hidden="true"></div>
       <div>
         <p>Auditing document&hellip; this may take a moment.</p>
-        <p>Once the audit is complete, this notification will be removed and the Accessibility Audit Report will be displayed.</p>
+        <p>When the audit is complete, the findings will appear in the audit dashboard.</p>
       </div>
     </section>
 
     <section id="results-section" class="audit-dashboard" hidden aria-labelledby="results-heading">
-      <h2 id="results-heading" class="visually-hidden">Accessibility audit report</h2>
+      <header class="report-hero">
+        <div>
+          <p class="report-eyebrow">PDF accessibility audit</p>
+          <h2 id="results-heading">Audit dashboard</h2>
+          <p class="results-filename">File: <strong id="report-file-name"></strong></p>
+        </div>
+      </header>
+
+      <nav class="report-nav" aria-label="Audit report sections">
+        <a href="#audit-overview">Overview</a>
+        <a href="#checker-tree">Checker tree</a>
+        <a href="#audit-failures">Failures</a>
+        <a href="#manual-checks">Manual checks</a>
+      </nav>
+
       <div class="report-content">
-        <article class="report-card">
-          <div id="report-output" class="report-output"></div>
-        </article>
+        <section id="audit-overview" class="report-section" aria-labelledby="overview-heading">
+          <h3 id="overview-heading">Overview</h3>
+          <div id="report-kpis" class="report-kpis"></div>
+          <div id="report-summary" class="report-card report-output"></div>
+        </section>
+
+        <section id="checker-tree" class="report-section" aria-labelledby="checker-heading">
+          <h3 id="checker-heading">Accessibility checker tree</h3>
+          <div id="checker-output" class="checker-grid"></div>
+        </section>
+
+        <section id="audit-failures" class="report-section" aria-labelledby="failures-heading">
+          <h3 id="failures-heading">Failures and remediation</h3>
+          <div id="failures-output" class="report-card report-output"></div>
+        </section>
+
+        <section id="manual-checks" class="report-section" aria-labelledby="manual-heading">
+          <h3 id="manual-heading">Manual verification queue</h3>
+          <div id="manual-output" class="report-card report-output manual-review-card"></div>
+        </section>
+
         <div class="report-actions" aria-label="Report actions">
           <button type="button" id="copy-btn" class="secondary-btn">Copy report</button>
-          <button type="button" class="primary-btn" onclick="window.print()">Print or save as PDF</button>
+          <button type="button" id="print-report" class="primary-btn">Print or save as PDF</button>
+          <button type="button" id="remediation-json" class="primary-btn remediation-json-btn">Remediation JSON</button>
         </div>
       </div>
     </section>
@@ -79,6 +112,6 @@
     </div>
   </footer>
 
-  <script src="/js/app.js?v=2"></script>
+  <script src="/js/app.js?v=7"></script>
 </body>
 </html>

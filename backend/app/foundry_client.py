@@ -1,4 +1,4 @@
-"""Client wrapper around the Microsoft Foundry model used to audit PDFs."""
+"""Client wrapper around the Microsoft Foundry agent used to audit PDFs."""
 
 import base64
 import logging
@@ -70,15 +70,11 @@ class FoundryAgentClient:
             f"Agent '{config.AGENT_NAME}' was not found in the Foundry project."
         )
 
-    def audit_pdf(self, file_path: str, original_filename: str) -> AuditResult:
-        agents_client = self.project_client.agents
-        agent_id = self._resolve_agent_id()
-        agent = agents_client.get_agent(agent_id)
-
+    def _audit_with_responses_api(self, agent, file_path: str, original_filename: str):
         with open(file_path, "rb") as pdf_file:
             encoded_pdf = base64.b64encode(pdf_file.read()).decode("ascii")
 
-        response = self.openai_client.responses.create(
+        return self.openai_client.responses.create(
             model=agent.model,
             instructions=agent.instructions or None,
             input=[
@@ -101,8 +97,19 @@ class FoundryAgentClient:
                 }
             ],
         )
+
+    def audit_pdf(self, file_path: str, original_filename: str) -> AuditResult:
+        agents_client = self.project_client.agents
+        agent_id = self._resolve_agent_id()
+        agent = agents_client.get_agent(agent_id)
+
+        response = self._audit_with_responses_api(
+            agent,
+            file_path,
+            original_filename,
+        )
         if not response.output_text:
-            raise AgentAuditError("The model did not return a response.")
+            raise AgentAuditError("The agent did not return a response.")
         return AuditResult(
             thread_id=response.id,
             run_id=response.id,

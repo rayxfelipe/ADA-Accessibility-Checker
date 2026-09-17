@@ -1,13 +1,13 @@
 """FastAPI application exposing the PDF ADA Accessibility Checker."""
 
 import logging
-import os
 import tempfile
+import threading
+import uuid
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import config
@@ -26,6 +26,38 @@ app.add_middleware(
 )
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"
+audit_jobs: dict[str, dict[str, str]] = {}
+audit_jobs_lock = threading.Lock()
+
+
+def _update_audit_job(job_id: str, **values: str) -> None:
+    with audit_jobs_lock:
+        audit_jobs[job_id].update(values)
+
+
+def _run_audit_job(job_id: str, file_path: str, filename: str) -> None:
+    _update_audit_job(job_id, status="running")
+    try:
+        result = foundry_agent_client.audit_pdf(file_path, filename)
+        _update_audit_job(
+            job_id,
+            status="completed",
+            threadId=result.thread_id,
+            runId=result.run_id,
+            report=result.response_text,
+        )
+    except AgentAuditError as exc:
+        logger.error("Agent audit failed: %s", exc)
+        _update_audit_job(job_id, status="failed", error=str(exc))
+    except Exception:  # noqa: BLE001 - preserve a clean error for the client
+        logger.exception("Unexpected error while auditing PDF")
+        _update_audit_job(
+            job_id,
+            status="failed",
+            error="Unexpected error while auditing the document.",
+        )
+    finally:
+        Path(file_path).unlink(missing_ok=True)
 
 
 @app.get("/api/health")
@@ -33,9 +65,10 @@ def health_check():
     return {"status": "ok", "agent": config.AGENT_NAME}
 
 
-@app.post("/api/audit")
-async def audit_pdf(file: UploadFile = File(...)):
-    if file.content_type != "application/pdf" and not file.filename.lower().endswith(".pdf"):
+@app.post("/api/audit", status_code=202)
+async def audit_pdf(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+    filename = file.filename or "document.pdf"
+    if file.content_type != "application/pdf" and not filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
 
     contents = await file.read()
@@ -51,25 +84,20 @@ async def audit_pdf(file: UploadFile = File(...)):
         tmp.write(contents)
         tmp_path = tmp.name
 
-    try:
-        result = foundry_agent_client.audit_pdf(tmp_path, file.filename)
-    except AgentAuditError as exc:
-        logger.error("Agent audit failed: %s", exc)
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
-    except Exception as exc:  # noqa: BLE001 - surface a clean error to the client
-        logger.exception("Unexpected error while auditing PDF")
-        raise HTTPException(status_code=500, detail="Unexpected error while auditing the document.") from exc
-    finally:
-        os.unlink(tmp_path)
+    job_id = uuid.uuid4().hex
+    with audit_jobs_lock:
+        audit_jobs[job_id] = {"jobId": job_id, "status": "queued", "filename": filename}
+    background_tasks.add_task(_run_audit_job, job_id, tmp_path, filename)
+    return {"jobId": job_id, "status": "queued", "filename": filename}
 
-    return JSONResponse(
-        {
-            "filename": file.filename,
-            "threadId": result.thread_id,
-            "runId": result.run_id,
-            "report": result.response_text,
-        }
-    )
+
+@app.get("/api/audit/{job_id}")
+def get_audit_job(job_id: str):
+    with audit_jobs_lock:
+        job = audit_jobs.get(job_id)
+        if job is None:
+            raise HTTPException(status_code=404, detail="Audit job was not found.")
+        return dict(job)
 
 
 if FRONTEND_DIR.exists():

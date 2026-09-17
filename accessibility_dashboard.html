@@ -1,72 +1,366 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Accessibility Analysis | Certificate of Occupancy 75054</title>
-<style>
-:root{--navy:#102a43;--blue:#1463ff;--sky:#eaf2ff;--red:#b42318;--redbg:#fff1f0;--amber:#925b00;--amberbg:#fff8e6;--green:#067647;--greenbg:#ecfdf3;--ink:#172b4d;--muted:#5f6c7b;--line:#d8e0ea;--bg:#f4f7fb;--card:#fff;--focus:#ffbf47}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
-a{color:var(--blue)}button,select,input{font:inherit}button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
-.skip{position:absolute;left:-9999px;top:8px;background:#fff;padding:10px;z-index:99}.skip:focus{left:8px}
-header{background:linear-gradient(115deg,#0d2740,#164f80);color:#fff;padding:30px clamp(18px,4vw,58px)}
-.header-grid{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start;max-width:1400px;margin:auto}.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-weight:700;font-size:.78rem;color:#b9d9ff}h1{font-size:clamp(1.85rem,4vw,3.1rem);line-height:1.08;margin:.35rem 0 .7rem}.subtitle{max-width:820px;color:#e3efff;margin:0}.status{background:#fff;color:var(--red);border-left:6px solid var(--red);border-radius:12px;padding:16px 18px;min-width:270px;box-shadow:0 8px 24px #001a3340}.status strong{display:block;font-size:1.1rem}.status span{color:#455566;font-size:.9rem}
-nav{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);padding:0 clamp(18px,4vw,58px);overflow:auto;white-space:nowrap}nav .inner{max-width:1400px;margin:auto;display:flex;gap:6px}nav a{display:inline-block;padding:14px 12px;text-decoration:none;font-weight:650;color:#334e68}nav a:hover{background:var(--sky)}
-main{max-width:1400px;margin:auto;padding:26px clamp(18px,4vw,58px) 60px}.grid{display:grid;gap:18px}.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 4px 15px #16324f0b}.kpi .value{font-size:2rem;font-weight:800;line-height:1.1}.kpi .label{color:var(--muted);font-weight:650}.kpi.danger{border-top:5px solid var(--red)}.kpi.warn{border-top:5px solid #d99a00}.kpi.info{border-top:5px solid var(--blue)}.kpi.neutral{border-top:5px solid #718096}
-section{scroll-margin-top:70px;margin-top:28px}h2{font-size:1.55rem;margin:0 0 14px}h3{margin:0 0 10px}.two{grid-template-columns:1.2fr .8fr}.meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.meta div{background:#f7f9fc;padding:12px;border-radius:10px}.meta dt{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700}.meta dd{margin:3px 0 0;font-weight:650}
-.alert{border-left:6px solid;padding:16px 18px;border-radius:10px}.alert-danger{border-color:var(--red);background:var(--redbg)}.alert-warn{border-color:#d99a00;background:var(--amberbg)}.alert-info{border-color:var(--blue);background:var(--sky)}
-.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:14px}.control{display:grid;gap:4px}.control label{font-weight:700;font-size:.86rem}.control select,.control input{border:1px solid #aebdcd;border-radius:9px;padding:9px 11px;background:#fff}.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}.btn-primary{background:var(--blue);color:#fff}.btn-light{background:#edf2f7;color:#23384d}.btn:hover{filter:brightness(.96)}
-.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{border-collapse:collapse;width:100%;min-width:920px;background:#fff}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}th{background:#eef3f8;color:#243b53;position:sticky;top:0}tr:hover td{background:#f9fbfd}.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-weight:750;font-size:.76rem;white-space:nowrap}.required{color:var(--red);background:var(--redbg)}.undetermined{color:var(--amber);background:var(--amberbg)}.concern{color:#7a3e00;background:#fff2db}.manual{color:#155cc0;background:#eaf2ff}
-.meter{height:14px;background:#e7edf4;border-radius:999px;overflow:hidden}.meter span{display:block;height:100%;background:linear-gradient(90deg,#b42318,#ff8a65);width:0;transition:width .6s ease}.legend{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.85rem;margin-top:8px}.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:4px}.bar-row{display:grid;grid-template-columns:150px 1fr 40px;gap:10px;align-items:center;margin:12px 0}.bar{height:18px;background:#e7edf4;border-radius:5px;overflow:hidden}.bar i{display:block;height:100%;background:#1463ff}
-details{border:1px solid var(--line);border-radius:12px;background:#fff;margin:10px 0}summary{padding:14px 16px;font-weight:750;cursor:pointer}details>div{padding:0 16px 16px}.checklist{display:grid;gap:10px}.check{display:flex;gap:10px;align-items:flex-start;background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:11px}.check input{margin-top:4px;width:18px;height:18px}.check.done{background:var(--greenbg);border-color:#83d6ad}.progress-line{display:flex;justify-content:space-between;font-weight:700;margin-bottom:7px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.screen-reader{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-footer{background:#102a43;color:#d8e6f3;padding:24px clamp(18px,4vw,58px)}footer div{max-width:1400px;margin:auto}.small{font-size:.86rem;color:var(--muted)}
-@media(max-width:900px){.kpis,.two{grid-template-columns:1fr 1fr}.header-grid{grid-template-columns:1fr}.status{min-width:0}.meta{grid-template-columns:1fr}}@media(max-width:580px){.kpis,.two{grid-template-columns:1fr}.bar-row{grid-template-columns:110px 1fr 30px}}
-@media print{nav,.controls,.actions,.skip{display:none!important}body{background:#fff}.card{box-shadow:none;break-inside:avoid}header{background:#fff;color:#000;padding:18px 0;border-bottom:2px solid #000}.subtitle,.eyebrow{color:#333}.status{box-shadow:none}.table-wrap{overflow:visible}table{min-width:0;font-size:10px}main{padding:10px 0}details>div{display:block!important}details{break-inside:avoid}footer{background:#fff;color:#333;padding:10px 0}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Upload a PDF and review its accessibility audit report">
+  <title>PDF Accessibility Audit</title>
+  <style>
+    :root {
+      --navy: #102a43;
+      --ink: #243b53;
+      --muted: #526777;
+      --line: #cfd9e3;
+      --amber: #8a5700;
+      --amber-bg: #fff6df;
+      --focus: #1463ff;
+      --blue: #145dbf;
+      --green: #087443;
+      --red: #b42318;
+      --red-bg: #fff1f0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background: linear-gradient(145deg, #eaf3fb 0%, #f8fafc 48%, #fff3e8 100%);
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.55;
+    }
+
+    .skip-link {
+      position: absolute;
+      top: 12px;
+      left: -9999px;
+      z-index: 2;
+      padding: 10px 14px;
+      color: var(--navy);
+      background: #fff;
+      border: 2px solid var(--focus);
+    }
+
+    .skip-link:focus {
+      left: 12px;
+    }
+
+    main {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: clamp(24px, 6vw, 72px);
+    }
+
+    .dashboard {
+      width: min(920px, 100%);
+      padding: clamp(26px, 5vw, 50px);
+      background: #fff;
+      border: 1px solid var(--line);
+      border-top: 6px solid var(--blue);
+      border-radius: 8px;
+      box-shadow: 0 18px 50px rgb(16 42 67 / 12%);
+    }
+
+    .kicker {
+      margin: 0 0 10px;
+      color: var(--blue);
+      font-family: "Trebuchet MS", sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--navy);
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .intro {
+      max-width: 680px;
+      margin-top: 12px;
+      color: var(--muted);
+    }
+
+    .audit-form,
+    .report {
+      margin-top: 26px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+    }
+
+    .file-picker {
+      display: grid;
+      gap: 8px;
+      padding: 24px;
+      background: #f6f9fc;
+      border: 2px dashed #9db0c2;
+      border-radius: 8px;
+    }
+
+    .file-picker:focus-within {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .file-picker label {
+      color: var(--navy);
+      font-family: "Trebuchet MS", sans-serif;
+      font-weight: 700;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      color: var(--muted);
+      font: inherit;
+    }
+
+    input[type="file"]::file-selector-button,
+    button {
+      min-height: 44px;
+      padding: 10px 16px;
+      color: #fff;
+      background: var(--blue);
+      border: 2px solid transparent;
+      border-radius: 6px;
+      font-family: "Trebuchet MS", sans-serif;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    input[type="file"]::file-selector-button {
+      margin-right: 12px;
+    }
+
+    button {
+      margin-top: 16px;
+    }
+
+    button:hover:not(:disabled),
+    input[type="file"]::file-selector-button:hover {
+      background: #0e4d9f;
+    }
+
+    button:disabled {
+      color: #4f5d68;
+      background: #d7dee5;
+      cursor: not-allowed;
+    }
+
+    button:focus-visible,
+    input[type="file"]:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .message {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-left: 5px solid var(--blue);
+      background: #edf5ff;
+    }
+
+    .message.error {
+      color: var(--red);
+      background: var(--red-bg);
+      border-color: var(--red);
+      font-weight: 700;
+    }
+
+    .report-header {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .report-file {
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .report-output {
+      max-height: 70vh;
+      margin: 16px 0 0;
+      padding: 18px;
+      overflow: auto;
+      color: #172b4d;
+      background: #f6f8fa;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font: 0.9rem/1.6 "Courier New", monospace;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    h2 {
+      margin: 0 0 7px;
+      color: var(--navy);
+      font-family: "Trebuchet MS", sans-serif;
+      font-size: 1.05rem;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    @media print {
+      body {
+        min-height: 0;
+        background: #fff;
+      }
+
+      main {
+        min-height: 0;
+        padding: 0;
+      }
+
+      .dashboard {
+        border: 1px solid #777;
+        box-shadow: none;
+      }
+
+      .skip-link,
+      .audit-form,
+      .print-button {
+        display: none;
+      }
+    }
+  </style>
 </head>
 <body>
-<a class="skip" href="#main">Skip to main content</a>
-<header><div class="header-grid"><div><div class="eyebrow">Digital Accessibility Assessment</div><h1>Certificate of Occupancy PDF</h1><p class="subtitle">Interactive preliminary report for Certificate 75054, Permit 09016-10000-01301, 201 N. Figueroa St., Los Angeles. Baseline: WCAG 2.1 Level A/AA.</p></div><div class="status" role="status" aria-label="Conformance status"><strong>Conformance not established</strong><span>Image-only PDF; accessibility barriers confirmed</span></div></div></header>
-<nav aria-label="Report sections"><div class="inner"><a href="#overview">Overview</a><a href="#findings">Findings</a><a href="#remediation">Remediation</a><a href="#exception">Regulatory exception</a><a href="#actions">Immediate action</a></div></nav>
-<main id="main">
-<section id="overview" aria-labelledby="overview-title"><h2 id="overview-title">Executive dashboard</h2>
-<div class="grid kpis"><article class="card kpi danger"><div class="value">0</div><div class="label">Conformance claims supported</div></article><article class="card kpi warn"><div class="value">10</div><div class="label">Preliminary findings</div></article><article class="card kpi info"><div class="value">2</div><div class="label">Pages reviewed</div></article><article class="card kpi neutral"><div class="value">1</div><div class="label">Potential exception for legal review</div></article></div>
-<div class="grid two" style="margin-top:18px"><article class="card"><h3>Direct answer</h3><div class="alert alert-danger"><strong>CONFORMANCE NOT ESTABLISHED.</strong> The supplied two-page PDF appears to be an image-only scan, and no text could be parsed. A screen reader would likely encounter page images rather than the certificate’s text, headings, tables, and relationships.</div><p>The document should not be represented as conforming to WCAG 2.1 Level A/AA based on the available evidence. Automated results alone are not sufficient to establish conformance.</p></article>
-<article class="card"><h3>Document identified</h3><dl class="meta"><div><dt>Certificate</dt><dd>75054</dd></div><div><dt>Permit</dt><dd>09016-10000-01301</dd></div><div><dt>Issue/status date</dt><dd>September 3, 2021</dd></div><div><dt>Primary use</dt><dd>Office</dd></div><div><dt>Property</dt><dd>201 N. Figueroa St., 1st Floor</dd></div><div><dt>Owner</dt><dd>City of Los Angeles</dd></div></dl></article></div>
-<div class="grid two" style="margin-top:18px"><article class="card"><h3>Risk profile</h3><div class="bar-row"><span>Likely fails</span><div class="bar"><i style="width:20%;background:#b42318"></i></div><b>2</b></div><div class="bar-row"><span>Concerns</span><div class="bar"><i style="width:20%;background:#d97706"></i></div><b>2</b></div><div class="bar-row"><span>Undetermined</span><div class="bar"><i style="width:30%;background:#718096"></i></div><b>3</b></div><div class="bar-row"><span>Action required</span><div class="bar"><i style="width:30%;background:#1463ff"></i></div><b>3</b></div></article><article class="card"><h3>Core barrier</h3><p><strong>Meaningful content is embedded in raster page images.</strong></p><p>OCR may make words discoverable, but it does not by itself create headings, table structure, reading order, or label/value relationships.</p><div class="alert alert-info"><strong>Preferred outcome:</strong> Publish an accessible HTML record and retain the scan as the original-record download.</div></article></div></section>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <main id="main-content">
+    <article class="dashboard" aria-labelledby="page-title">
+      <p class="kicker">PDF accessibility audit</p>
+      <h1 id="page-title">Accessibility Checker</h1>
+      <p class="intro">Upload the original PDF to inspect its accessibility structure and generate the evidence-based audit report.</p>
 
-<section id="findings" aria-labelledby="findings-title"><h2 id="findings-title">Preliminary findings</h2><div class="card"><div class="controls"><div class="control"><label for="level">WCAG level</label><select id="level"><option value="all">All</option><option value="A">Level A</option><option value="AA">Level AA</option><option value="practice">Recommended practice</option></select></div><div class="control"><label for="statusFilter">Assessment</label><select id="statusFilter"><option value="all">All</option><option value="Likely fails">Likely fails</option><option value="Significant concern">Significant concern</option><option value="Undetermined">Undetermined</option><option value="Action required">Action required</option><option value="Poor">Poor</option></select></div><div class="control"><label for="search">Search findings</label><input id="search" type="search" placeholder="e.g., reading order"></div><button class="btn btn-light" id="resetFilters">Reset</button></div><p id="resultCount" aria-live="polite" class="small"></p><div class="table-wrap"><table><caption class="screen-reader">Accessibility requirements and preliminary findings</caption><thead><tr><th scope="col">Classification</th><th scope="col">Requirement / SC</th><th scope="col">Assessment</th><th scope="col">Evidence</th><th scope="col">Gap or action</th></tr></thead><tbody id="findingsBody"></tbody></table></div></div></section>
+      <form class="audit-form" id="audit-form">
+        <div class="file-picker">
+          <label for="pdf-file">PDF document</label>
+          <input id="pdf-file" name="file" type="file" accept="application/pdf,.pdf" required aria-describedby="file-help">
+          <p id="file-help">Maximum file size: 25 MB.</p>
+        </div>
+        <button id="run-audit" type="submit" disabled>Run Accessibility Audit</button>
+      </form>
 
-<section id="remediation" aria-labelledby="remediation-title"><h2 id="remediation-title">Recommended remediation</h2><div class="grid two"><article class="card"><h3>Preferred solution: accessible HTML record</h3><ol><li>Use a descriptive page title and one primary heading.</li><li>Organize content under logical section headings.</li><li>Use definition lists for simple label/value information.</li><li>Use data tables only for meaningful row and column relationships.</li><li>Provide meaningful text for approval and signature information.</li><li>Treat seals as decorative where they add no information.</li><li>Retain the scan as a clearly labeled secondary format.</li></ol></article><article class="card"><h3>Remediation tracker</h3><div class="progress-line"><span>Checklist progress</span><span id="progressText">0 of 10 complete</span></div><div class="meter" aria-hidden="true"><span id="progressBar"></span></div><div class="checklist" id="checklist" style="margin-top:14px"></div><div class="actions"><button class="btn btn-light" id="clearChecks">Clear progress</button></div></article></div>
-<details><summary>If the PDF must remain the primary format</summary><div><ul><li>Run high-quality OCR and correct every recognition error.</li><li>Tag the PDF from the document root, including headings, paragraphs, tables, headers, and cells.</li><li>Define and manually verify reading order across columns and boxes.</li><li>Set the document title and English language metadata.</li><li>Mark decorative graphics as artifacts and provide alternatives for meaningful graphics.</li><li>Test with Acrobat accessibility tools, NVDA, JAWS where available, keyboard inspection, and 200% and 400% magnification.</li><li>Compare all exposed text against the visible certificate.</li></ul><div class="alert alert-warn"><strong>OCR alone is not remediation.</strong> Structure, relationships, and reading order still require correction and manual verification.</div></div></details>
-</section>
+      <p class="message" id="audit-status" role="status" aria-live="polite" hidden></p>
+      <p class="message error" id="audit-error" role="alert" hidden></p>
 
-<section id="exception" aria-labelledby="exception-title"><h2 id="exception-title">Possible regulatory exception</h2><div class="alert alert-warn"><strong>POTENTIAL REGULATORY EXCEPTION – LEGAL REVIEW REQUIRED</strong><p>Because the certificate was issued September 3, 2021, a preexisting-conventional-electronic-document exception might be relevant. Age alone does not establish the exception.</p></div><div class="card" style="margin-top:14px"><h3>Questions requiring confirmation</h3><ul><li>Where is the PDF currently published?</li><li>Is it returned through a public property or permit search?</li><li>Is it needed for a sale, lease, permit, inspection, financing, or another current service?</li><li>Is it stored in a dedicated archive or an active records system?</li><li>Is access public or password protected?</li><li>Has the file been altered since archiving?</li></ul><p class="small">Even if an exception applies, an accessible format may still need to be provided upon request. Legal review should confirm applicability.</p></div></section>
+      <section class="report" id="report" aria-labelledby="report-title" hidden>
+        <div class="report-header">
+          <div>
+            <h2 id="report-title">Accessibility Audit Report</h2>
+            <p class="report-file">File: <strong id="report-filename"></strong></p>
+          </div>
+          <button class="print-button" id="print-report" type="button">Print report</button>
+        </div>
+        <pre class="report-output" id="report-output" tabindex="0"></pre>
+      </section>
+    </article>
+  </main>
+  <script>
+    (() => {
+      const form = document.getElementById("audit-form");
+      const fileInput = document.getElementById("pdf-file");
+      const runButton = document.getElementById("run-audit");
+      const status = document.getElementById("audit-status");
+      const error = document.getElementById("audit-error");
+      const report = document.getElementById("report");
+      const reportFilename = document.getElementById("report-filename");
+      const reportOutput = document.getElementById("report-output");
+      const maxFileSize = 25 * 1024 * 1024;
+      const apiUrl = window.location.protocol === "file:"
+        ? "http://127.0.0.1:8000/api/audit"
+        : "/api/audit";
 
-<section id="actions" aria-labelledby="actions-title"><h2 id="actions-title">Immediate action</h2><div class="card"><div class="alert alert-danger"><strong>Create an accessible HTML transcription and retain the scanned PDF as the original-record download.</strong></div><p>Until remediation and assistive-technology testing are complete, record the status as:</p><blockquote>“Image-only PDF; accessibility barriers confirmed; WCAG 2.1 A/AA conformance not established.”</blockquote><div class="actions"><button class="btn btn-primary" onclick="window.print()">Print or save as PDF</button><button class="btn btn-light" id="expandAll">Expand all details</button></div></div></section>
-</main>
-<footer><div><strong>Accessibility Analysis Report</strong><br><span>Preliminary assessment based on supplied evidence. Manual verification and legal review remain required where identified.</span></div></footer>
-<script>
-const findings=[
-{level:'A',classification:'REQUIRED – WCAG 2.1 A',sc:'1.1.1 Non-text Content',status:'Action required',evidence:'Both pages appear to be raster images containing meaningful information.',action:'Provide equivalent machine-readable text; identify meaningful seals and signatures appropriately. Manual screen-reader verification required.'},
-{level:'A',classification:'REQUIRED – WCAG 2.1 A',sc:'1.3.1 Info and Relationships',status:'Action required',evidence:'The certificate uses headings, boxed sections, columns, labels, and tabular property and permit data. No programmatic structure is evident.',action:'Add tagged headings, paragraphs, tables, table headers, and label/value relationships. Semi-automated plus manual testing.'},
-{level:'A',classification:'REQUIRED – WCAG 2.1 A',sc:'1.3.2 Meaningful Sequence',status:'Action required',evidence:'The visual reading sequence crosses multiple columns and boxed regions.',action:'Establish and manually verify a logical tag and reading order for both pages.'},
-{level:'AA',classification:'REQUIRED – WCAG 2.1 AA',sc:'1.4.3 Contrast (Minimum)',status:'Undetermined',evidence:'The scan appears predominantly black on white, but small and degraded text is present.',action:'Measure representative text; do not infer a pass from visual inspection.'},
-{level:'AA',classification:'REQUIRED – WCAG 2.1 AA',sc:'1.4.5 Images of Text',status:'Likely fails',evidence:'No parsed text indicates that ordinary document text is presented as page images.',action:'Replace scanned text with real text. Logos may remain images under the logo exception.'},
-{level:'AA',classification:'REQUIRED – WCAG 2.1 AA',sc:'1.4.10 Reflow',status:'Significant concern',evidence:'This is a fixed, dense page layout. Some data tables may require two-dimensional layout, but that does not excuse the entire page.',action:'Prefer responsive HTML. Test at 320 CSS pixels or 400% zoom and document any table-specific exception.'},
-{level:'AA',classification:'REQUIRED – WCAG 2.1 AA',sc:'1.4.12 Text Spacing',status:'Significant concern',evidence:'Image text cannot respond to user text-spacing overrides. Fixed-layout PDF is also problematic.',action:'Provide responsive HTML where spacing can be adjusted without loss of content.'},
-{level:'A',classification:'REQUIRED – WCAG 2.1 A',sc:'2.4.2 Page Titled',status:'Undetermined',evidence:'PDF metadata was not available in the supplied evidence.',action:'Set a descriptive title: Certificate of Occupancy 75054 – 201 N. Figueroa Street.'},
-{level:'AA',classification:'REQUIRED – WCAG 2.1 AA',sc:'2.4.6 Headings and Labels',status:'Likely fails',evidence:'Visual headings such as Permit Detail and Parcel Information do not appear programmatically exposed.',action:'Tag descriptive headings and preserve the hierarchy. Manual verification required.'},
-{level:'A',classification:'REQUIRED – WCAG 2.1 A',sc:'3.1.1 Language of Page',status:'Undetermined',evidence:'PDF language metadata was not provided.',action:'Set the document language to English and verify it in PDF properties and tag structure.'},
-{level:'practice',classification:'RECOMMENDED PRACTICE',sc:'Search, copy, selection, and magnification usability',status:'Poor',evidence:'No parseable text means users likely cannot search, select, copy, or use text-based assistive tools reliably.',action:'Supply real text, not only an OCR overlay without structure.'}
-];
-function badgeClass(s){return s==='Likely fails'?'required':s==='Undetermined'?'undetermined':s==='Significant concern'?'concern':'manual'}
-function render(){const l=document.getElementById('level').value,s=document.getElementById('statusFilter').value,q=document.getElementById('search').value.toLowerCase();const rows=findings.filter(x=>(l==='all'||x.level===l)&&(s==='all'||x.status===s)&&Object.values(x).join(' ').toLowerCase().includes(q));document.getElementById('findingsBody').innerHTML=rows.map(x=>`<tr><td><span class="badge ${x.level==='practice'?'manual':'required'}">${x.classification}</span></td><td><strong>${x.sc}</strong></td><td><span class="badge ${badgeClass(x.status)}">${x.status}</span></td><td>${x.evidence}</td><td>${x.action}</td></tr>`).join('');document.getElementById('resultCount').textContent=`Showing ${rows.length} of ${findings.length} findings.`}
-['level','statusFilter','search'].forEach(id=>document.getElementById(id).addEventListener(id==='search'?'input':'change',render));document.getElementById('resetFilters').onclick=()=>{document.getElementById('level').value='all';document.getElementById('statusFilter').value='all';document.getElementById('search').value='';render()};
-const tasks=['Create accessible HTML transcription','Complete and correct OCR','Add document title metadata','Set language to English','Tag headings and paragraphs','Tag tables, headers, and cells','Correct reading order','Add text alternatives or mark artifacts','Test with screen readers and keyboard','Verify at 200% and 400% magnification'];
-const saved=JSON.parse(localStorage.getItem('a11yChecklist75054')||'[]');const cl=document.getElementById('checklist');tasks.forEach((t,i)=>{const label=document.createElement('label');label.className='check';label.innerHTML=`<input type="checkbox" data-i="${i}" ${saved.includes(i)?'checked':''}><span>${t}</span>`;cl.appendChild(label)});
-function updateProgress(){const checked=[...cl.querySelectorAll('input:checked')].map(x=>+x.dataset.i);localStorage.setItem('a11yChecklist75054',JSON.stringify(checked));cl.querySelectorAll('.check').forEach(x=>x.classList.toggle('done',x.querySelector('input').checked));document.getElementById('progressText').textContent=`${checked.length} of ${tasks.length} complete`;document.getElementById('progressBar').style.width=`${checked.length/tasks.length*100}%`}
-cl.addEventListener('change',updateProgress);document.getElementById('clearChecks').onclick=()=>{cl.querySelectorAll('input').forEach(x=>x.checked=false);updateProgress()};document.getElementById('expandAll').onclick=()=>document.querySelectorAll('details').forEach(x=>x.open=true);render();updateProgress();
-</script>
+      function showError(message) {
+        error.textContent = message;
+        error.hidden = false;
+      }
+
+      function resetMessages() {
+        status.hidden = true;
+        error.hidden = true;
+        error.textContent = "";
+      }
+
+      fileInput.addEventListener("change", () => {
+        resetMessages();
+        const file = fileInput.files[0];
+        const validPdf = file && (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"));
+
+        if (!file) {
+          runButton.disabled = true;
+          return;
+        }
+        if (!validPdf) {
+          runButton.disabled = true;
+          showError("Select a PDF file.");
+          return;
+        }
+        if (file.size > maxFileSize) {
+          runButton.disabled = true;
+          showError("The selected PDF exceeds the 25 MB size limit.");
+          return;
+        }
+        runButton.disabled = false;
+      });
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        resetMessages();
+        report.hidden = true;
+        status.textContent = "Auditing the PDF. This may take a moment.";
+        status.hidden = false;
+        runButton.disabled = true;
+        runButton.textContent = "Running audit...";
+        form.setAttribute("aria-busy", "true");
+
+        const body = new FormData();
+        body.append("file", file);
+
+        try {
+          const response = await fetch(apiUrl, { method: "POST", body });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data.detail || `Audit request failed (${response.status}).`);
+          }
+
+          reportFilename.textContent = data.filename || file.name;
+          reportOutput.textContent = data.report || "No audit report was returned.";
+          report.hidden = false;
+          status.hidden = true;
+          report.scrollIntoView({ behavior: "smooth", block: "start" });
+          reportOutput.focus();
+        } catch (requestError) {
+          status.hidden = true;
+          showError(requestError.message || "The accessibility audit could not be completed.");
+        } finally {
+          form.removeAttribute("aria-busy");
+          runButton.disabled = false;
+          runButton.textContent = "Run Accessibility Audit";
+        }
+      });
+
+      document.getElementById("print-report").addEventListener("click", () => window.print());
+    })();
+  </script>
 </body>
 </html>
