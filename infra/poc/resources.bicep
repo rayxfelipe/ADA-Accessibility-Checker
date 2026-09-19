@@ -51,23 +51,115 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
+  name: 'vnet-ada-poc-${nameSuffix}'
+  location: location
+  tags: tags
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.42.0.0/16'
+      ]
+    }
+  }
+}
+
+resource integrationSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
+  parent: virtualNetwork
+  name: 'snet-app-integration'
+  properties: {
+    addressPrefix: '10.42.1.0/24'
+    delegations: [
+      {
+        name: 'app-service-delegation'
+        properties: {
+          serviceName: 'Microsoft.Web/serverFarms'
+        }
+      }
+    ]
+  }
+}
+
+resource privateEndpointSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
+  parent: virtualNetwork
+  name: 'snet-private-endpoints'
+  properties: {
+    addressPrefix: '10.42.2.0/24'
+    privateEndpointNetworkPolicies: 'Disabled'
+  }
+}
+
+resource keyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: 'privatelink.vaultcore.azure.net'
+  location: 'global'
+  tags: tags
+}
+
+resource keyVaultPrivateDnsLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2024-06-01' = {
+  parent: keyVaultPrivateDnsZone
+  name: 'vnet-ada-poc-${nameSuffix}'
+  location: 'global'
+  tags: tags
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: virtualNetwork.id
+    }
+  }
+}
+
 resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' = {
   name: 'kv-ada-poc-${nameSuffix}'
   location: location
   tags: tags
   properties: {
+    enablePurgeProtection: true
     enableRbacAuthorization: true
     enableSoftDelete: true
-    networkAcls: {
-      bypass: 'AzureServices'
-      defaultAction: 'Allow'
-    }
+    publicNetworkAccess: 'Disabled'
     sku: {
       family: 'A'
       name: 'standard'
     }
     softDeleteRetentionInDays: 7
     tenantId: subscription().tenantId
+  }
+}
+
+resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
+  name: 'pe-kv-ada-poc-${nameSuffix}'
+  location: location
+  tags: tags
+  properties: {
+    privateLinkServiceConnections: [
+      {
+        name: 'key-vault'
+        properties: {
+          groupIds: [
+            'vault'
+          ]
+          privateLinkServiceId: keyVault.id
+        }
+      }
+    ]
+    subnet: {
+      id: privateEndpointSubnet.id
+    }
+  }
+}
+
+resource keyVaultPrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-05-01' = {
+  parent: keyVaultPrivateEndpoint
+  name: 'key-vault'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'key-vault'
+        properties: {
+          privateDnsZoneId: keyVaultPrivateDnsZone.id
+        }
+      }
+    ]
   }
 }
 
@@ -97,7 +189,11 @@ resource remediatorApp 'Microsoft.Web/sites@2024-11-01' = {
   properties: {
     clientAffinityEnabled: false
     httpsOnly: true
+    outboundVnetRouting: {
+      allTraffic: true
+    }
     serverFarmId: appServicePlan.id
+    virtualNetworkSubnetId: integrationSubnet.id
     siteConfig: {
       acrUseManagedIdentityCreds: true
       alwaysOn: true
@@ -152,7 +248,11 @@ resource checkerApp 'Microsoft.Web/sites@2024-11-01' = {
   properties: {
     clientAffinityEnabled: true
     httpsOnly: true
+    outboundVnetRouting: {
+      allTraffic: true
+    }
     serverFarmId: appServicePlan.id
+    virtualNetworkSubnetId: integrationSubnet.id
     siteConfig: {
       acrUseManagedIdentityCreds: true
       alwaysOn: true

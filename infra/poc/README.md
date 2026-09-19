@@ -6,8 +6,10 @@ This subscription-scope Bicep deployment creates a rollback-friendly POC without
 - Separate checker and remediator container apps.
 - One Key Vault containing the shared remediator key.
 - One Log Analytics workspace and one Application Insights resource.
+- One VNet with App Service integration and private-endpoint subnets.
+- One Key Vault private endpoint and private DNS zone.
 
-The apps use system-assigned managed identities. Both receive `AcrPull` on the existing private registry, and both receive read access to the POC-only Key Vault secret. FTP and SCM basic publishing credentials are disabled. The browser calls only the checker; the checker calls the remediator server-to-server.
+The apps use system-assigned managed identities. Both receive `AcrPull` on the existing private registry, and both receive read access to the POC-only Key Vault secret. Key Vault public network access is disabled; App Service resolves the secret through VNet integration and private DNS. FTP and SCM basic publishing credentials are disabled. The browser calls only the checker; the checker calls the remediator server-to-server.
 
 The default immutable images are:
 
@@ -16,7 +18,7 @@ The default immutable images are:
 
 ## External dependency
 
-The checker uses the configured Microsoft Foundry project and agent. That project is not created or modified by this deployment. Grant the checker app's output `checkerPrincipalId` the project role required to list and invoke `ADAAccessibilityCheckerAgent`. Until that grant is made, `/api/health` and remediation can work while new audit requests fail authentication.
+The checker uses the configured Microsoft Foundry project and agent. That project is not created or modified by this deployment. The project currently belongs to a different Entra tenant than the POC subscription, so this system-assigned identity cannot invoke it. Deploy the checker in the Foundry tenant or provide an approved cross-tenant application identity before enabling audits. `/api/health` and remediation work independently of that external audit dependency.
 
 ## Validation
 
@@ -30,4 +32,4 @@ After deployment, validate:
 
 ## Rollback
 
-Delete the POC resource group emitted as `resourceGroupName`. This removes both apps, their plan, vault, and telemetry without touching either existing web app. The two image tags and their ACR role assignments can then be removed separately if desired.
+Delete the POC resource group emitted as `resourceGroupName`. This removes both apps, their plan, network, and telemetry without touching either existing web app. Key Vault purge protection retains the soft-deleted vault for its retention period. The two image tags and their ACR role assignments can then be removed separately if desired.
