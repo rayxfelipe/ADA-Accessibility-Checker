@@ -16,7 +16,7 @@ param remediatorApiKey string
 
 param existingAcrName string = 'crpdfadastaging33f3'
 param existingAcrResourceGroupName string = 'rg-pdf-ada-staging-33f3'
-param checkerImageTag string = '814cb7b'
+param checkerImageTag string = '407150b'
 param remediatorImageTag string = '4e699a3'
 param projectEndpoint string = 'https://adaaccessibilitychecker-resource.services.ai.azure.com/api/projects/adaaccessibilitychecker'
 param agentName string = 'ADAAccessibilityCheckerAgent'

@@ -11,7 +11,7 @@ The apps use system-assigned managed identities. Both receive `AcrPull` on the e
 
 The default immutable images are:
 
-- `ada-accessibility-checker:814cb7b`
+- `ada-accessibility-checker:407150b`
 - `pdf-ada-remediator:4e699a3`
 
 ## External dependency
