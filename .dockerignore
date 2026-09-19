@@ -1,0 +1,9 @@
+.git
+.gitignore
+.venv
+.vscode
+__pycache__
+*.pyc
+.env
+backend/tests
+accessibility_dashboard.html
