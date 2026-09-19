@@ -47,5 +47,9 @@ Set these in `backend/.env` (see `backend/.env.example`):
 | `AZURE_CLIENT_ID` | User-assigned managed identity client ID (production only, optional) |
 | `MAX_FILE_SIZE_MB` | Max upload size, default 25 |
 | `ALLOWED_ORIGINS` | Comma-separated CORS origins, or `*` |
+| `REMEDIATOR_API_URL` | Base URL of the PDF remediator service; enables **Perform remediation** |
+| `REMEDIATOR_API_KEY` | Optional shared key sent only by the backend proxy |
+| `REMEDIATOR_TIMEOUT_SECONDS` | Remediator request timeout, default 120 seconds |
+| `REMEDIATOR_MAX_FILE_SIZE_MB` | Remediation upload limit, default 20 MB |
 
 In production, grant the app's managed identity the appropriate RBAC role on the Foundry project instead of relying on `DefaultAzureCredential`.

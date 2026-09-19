@@ -17,6 +17,8 @@
   const copyBtn = document.getElementById("copy-btn");
   const printReportBtn = document.getElementById("print-report");
   const remediationJsonBtn = document.getElementById("remediation-json");
+  const performRemediationBtn = document.getElementById("perform-remediation");
+  const remediationStatusEl = document.getElementById("remediation-status");
 
   const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
   const DEFAULT_SUBMIT_LABEL = "Run Accessibility Audit";
@@ -370,5 +372,52 @@
     downloadLink.download = downloadName;
     downloadLink.click();
     URL.revokeObjectURL(downloadUrl);
+  });
+
+  performRemediationBtn.addEventListener("click", async () => {
+    if (!selectedFile || !lastReportText) return;
+    const consented = window.confirm(
+      "The original PDF and its audit report will be sent to the PDF remediation service. Continue?"
+    );
+    if (!consented) return;
+
+    const remediationReport = JSON.stringify({
+      fileName: selectedFile.name,
+      remediationReport: lastReportText,
+    });
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+    formData.append("remediation_report", remediationReport);
+
+    clearError();
+    remediationStatusEl.textContent = "Applying supported PDF remediations...";
+    remediationStatusEl.hidden = false;
+    performRemediationBtn.disabled = true;
+    performRemediationBtn.textContent = "Remediating...";
+    try {
+      const response = await fetch("/api/remediate", { method: "POST", body: formData });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.detail || `Remediation failed (HTTP ${response.status}).`);
+      }
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.startsWith("application/pdf")) {
+        throw new Error("The remediation service returned an invalid file.");
+      }
+      const output = await response.blob();
+      const downloadUrl = URL.createObjectURL(output);
+      const downloadLink = document.createElement("a");
+      downloadLink.href = downloadUrl;
+      downloadLink.download = `${selectedFile.name.replace(/\.pdf$/i, "")}_remediated.pdf`;
+      downloadLink.click();
+      URL.revokeObjectURL(downloadUrl);
+      remediationStatusEl.textContent = "Remediation complete. The remediated PDF has been downloaded.";
+    } catch (error) {
+      remediationStatusEl.hidden = true;
+      showError(error.message || "The PDF could not be remediated.");
+    } finally {
+      performRemediationBtn.disabled = false;
+      performRemediationBtn.textContent = "Perform remediation";
+    }
   });
 })();

@@ -553,6 +553,21 @@ button:focus-visible {
 .report-actions .remediation-json-btn:hover {
   background: #085d3a;
 }
+.report-actions .remediate-btn {
+  background: #9f3a16;
+}
+.report-actions .remediate-btn:hover {
+  background: #7f2c0f;
+}
+.report-actions button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+.remediation-status {
+  margin: 0.85rem 0 0;
+  color: #1f5c31;
+  font-weight: 700;
+}
 
 .audit-metadata {
   margin: 0;

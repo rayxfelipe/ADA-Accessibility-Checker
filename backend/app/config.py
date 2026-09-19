@@ -22,6 +22,14 @@ MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 # CORS - comma separated list of allowed origins, "*" allows any origin
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 
+# Optional PDF remediation service used by the POC results-page action
+REMEDIATOR_API_URL = os.getenv("REMEDIATOR_API_URL", "").rstrip("/")
+REMEDIATOR_API_KEY = os.getenv("REMEDIATOR_API_KEY", "")
+REMEDIATOR_TIMEOUT_SECONDS = float(os.getenv("REMEDIATOR_TIMEOUT_SECONDS", "120"))
+REMEDIATOR_MAX_FILE_SIZE_MB = int(os.getenv("REMEDIATOR_MAX_FILE_SIZE_MB", "20"))
+REMEDIATOR_MAX_FILE_SIZE_BYTES = REMEDIATOR_MAX_FILE_SIZE_MB * 1024 * 1024
+REMEDIATION_REPORT_MAX_BYTES = 5 * 1024 * 1024
+
 # The instruction sent alongside the uploaded PDF on every audit request
 AUDIT_PROMPT = os.getenv(
     "AUDIT_PROMPT",

@@ -1,13 +1,17 @@
 """FastAPI application exposing the PDF ADA Accessibility Checker."""
 
+import json
 import logging
 import tempfile
 import threading
 import uuid
 from pathlib import Path
+from urllib.parse import quote
 
-from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
+import httpx
+from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 
 from . import config
@@ -98,6 +102,75 @@ def get_audit_job(job_id: str):
         if job is None:
             raise HTTPException(status_code=404, detail="Audit job was not found.")
         return dict(job)
+
+
+@app.post("/api/remediate")
+async def remediate_pdf(
+    file: UploadFile = File(...),
+    remediation_report: str = Form(...),
+):
+    if not config.REMEDIATOR_API_URL:
+        raise HTTPException(status_code=503, detail="PDF remediation is not configured.")
+
+    filename = (file.filename or "document.pdf").replace("\\", "/").rsplit("/", 1)[-1]
+    if file.content_type != "application/pdf" and not filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Only PDF files are supported.")
+    contents = await file.read()
+    if not contents or not contents.startswith(b"%PDF-"):
+        raise HTTPException(status_code=400, detail="The uploaded file is not a valid PDF.")
+    if len(contents) > config.REMEDIATOR_MAX_FILE_SIZE_BYTES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Remediation supports PDFs up to {config.REMEDIATOR_MAX_FILE_SIZE_MB}MB.",
+        )
+
+    report_bytes = remediation_report.encode("utf-8")
+    if len(report_bytes) > config.REMEDIATION_REPORT_MAX_BYTES:
+        raise HTTPException(status_code=400, detail="The remediation report is too large.")
+    try:
+        report = json.loads(remediation_report)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=400, detail="The remediation report is not valid JSON.") from exc
+    if not isinstance(report, dict) or report.get("fileName") != filename or not isinstance(report.get("remediationReport"), str):
+        raise HTTPException(status_code=400, detail="The remediation report does not match the uploaded PDF.")
+
+    headers = {}
+    if config.REMEDIATOR_API_KEY:
+        headers["X-Remediator-Key"] = config.REMEDIATOR_API_KEY
+    files = {
+        "file": (filename, contents, "application/pdf"),
+        "remediation_report": ("remediation-report.json", report_bytes, "application/json"),
+    }
+    try:
+        async with httpx.AsyncClient(timeout=config.REMEDIATOR_TIMEOUT_SECONDS) as client:
+            remediator_response = await client.post(
+                f"{config.REMEDIATOR_API_URL}/api/remediate",
+                files=files,
+                headers=headers,
+            )
+    except httpx.RequestError as exc:
+        logger.warning("PDF remediation service request failed: %s", exc)
+        raise HTTPException(status_code=502, detail="The PDF remediation service is unavailable.") from exc
+
+    if remediator_response.status_code != 200:
+        logger.warning("PDF remediation service returned HTTP %s", remediator_response.status_code)
+        detail = "The remediation report could not be applied."
+        raise HTTPException(status_code=400 if remediator_response.status_code == 400 else 502, detail=detail)
+    if remediator_response.headers.get("content-type", "").split(";", 1)[0] != "application/pdf" or not remediator_response.content.startswith(b"%PDF-"):
+        raise HTTPException(status_code=502, detail="The remediation service returned an invalid PDF.")
+    if len(remediator_response.content) > config.REMEDIATOR_MAX_FILE_SIZE_BYTES:
+        raise HTTPException(status_code=502, detail="The remediation service returned an oversized PDF.")
+
+    output_name = f"{Path(filename).stem}_remediated.pdf"
+    return Response(
+        content=remediator_response.content,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{quote(output_name, safe='')}",
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 if FRONTEND_DIR.exists():
