@@ -14,6 +14,10 @@ param checkerImageTag string
 param remediatorImageTag string
 param projectEndpoint string
 param agentName string
+param modelDeploymentName string
+param foundryResourceGroupName string
+param foundryAccountName string
+param foundryProjectName string
 
 var checkerAppName = 'app-ada-checker-poc-${nameSuffix}'
 var remediatorAppName = 'app-ada-remediator-poc-${nameSuffix}'
@@ -274,6 +278,10 @@ resource checkerApp 'Microsoft.Web/sites@2024-11-01' = {
           value: 'production'
         }
         {
+          name: 'MODEL_DEPLOYMENT_NAME'
+          value: modelDeploymentName
+        }
+        {
           name: 'PORT'
           value: '8000'
         }
@@ -368,6 +376,16 @@ module acrRoleAssignments './acr-role-assignments.bicep' = {
     acrName: existingAcrName
     checkerPrincipalId: checkerApp.identity.principalId
     remediatorPrincipalId: remediatorApp.identity.principalId
+  }
+}
+
+module foundryRoleAssignment './foundry-role-assignment.bicep' = {
+  name: 'foundry-role-assignment'
+  scope: resourceGroup(subscription().subscriptionId, foundryResourceGroupName)
+  params: {
+    foundryAccountName: foundryAccountName
+    foundryProjectName: foundryProjectName
+    checkerPrincipalId: checkerApp.identity.principalId
   }
 }
 

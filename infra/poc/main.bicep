@@ -16,10 +16,14 @@ param remediatorApiKey string
 
 param existingAcrName string = 'crpdfadastaging33f3'
 param existingAcrResourceGroupName string = 'rg-pdf-ada-staging-33f3'
-param checkerImageTag string = '407150b'
-param remediatorImageTag string = '4e699a3'
-param projectEndpoint string = 'https://adaaccessibilitychecker-resource.services.ai.azure.com/api/projects/adaaccessibilitychecker'
+param checkerImageTag string = 'foundry-v2-agent-v2'
+param remediatorImageTag string = 'foundry-report-v2'
+param projectEndpoint string = 'https://aifproject-ladbs-pdfrem-resource.services.ai.azure.com/api/projects/aifproject-ladbs-pdfremed-001'
 param agentName string = 'ADAAccessibilityCheckerAgent'
+param modelDeploymentName string = 'gpt-5'
+param foundryResourceGroupName string = 'rg-aifproject-ladbs-pdfremed-001'
+param foundryAccountName string = 'aifproject-ladbs-pdfrem-resource'
+param foundryProjectName string = 'aifproject-ladbs-pdfremed-001'
 
 var resourceGroupName = 'rg-ada-remediation-poc-${nameSuffix}'
 var tags = {
@@ -49,6 +53,10 @@ module resources './resources.bicep' = {
     remediatorImageTag: remediatorImageTag
     projectEndpoint: projectEndpoint
     agentName: agentName
+    modelDeploymentName: modelDeploymentName
+    foundryResourceGroupName: foundryResourceGroupName
+    foundryAccountName: foundryAccountName
+    foundryProjectName: foundryProjectName
   }
 }
 

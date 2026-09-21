@@ -13,12 +13,12 @@ The apps use system-assigned managed identities. Both receive `AcrPull` on the e
 
 The default immutable images are:
 
-- `ada-accessibility-checker:407150b`
+- `ada-accessibility-checker:foundry-v2-agent-v1`
 - `pdf-ada-remediator:4e699a3`
 
 ## External dependency
 
-The checker uses the configured Microsoft Foundry project and agent. That project is not created or modified by this deployment. The project currently belongs to a different Entra tenant than the POC subscription, so this system-assigned identity cannot invoke it. Deploy the checker in the Foundry tenant or provide an approved cross-tenant application identity before enabling audits. `/api/health` and remediation work independently of that external audit dependency.
+The checker uses the customer-owned `ADAAccessibilityCheckerAgent` prompt agent in the configured Microsoft Foundry project. The agent definition is versioned in `foundry/ADAAccessibilityCheckerAgent.json`, while the authoritative 32-rule audit policy remains in `backend/app/config.py:AUDIT_PROMPT`. This deployment does not create or modify the Foundry project or agent. Grant the checker app's managed identity the `Foundry User` role on the Foundry project before enabling audits. `/api/health` and remediation work independently of the audit dependency.
 
 ## Validation
 

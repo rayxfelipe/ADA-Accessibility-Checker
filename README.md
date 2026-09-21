@@ -13,7 +13,7 @@ frontend/   Static upload UI (HTML/CSS/JS)
 ## Prerequisites
 
 - Python 3.10+
-- Access to the Foundry project `adaaccessibilitychecker` with the `ADAAccessibilityCheckerAgent` agent deployed
+- Access to a Microsoft Foundry project with the `ADAAccessibilityCheckerAgent` prompt agent deployed
 - Signed in with the Azure CLI for local development: `az login`
 
 ## Setup
@@ -43,6 +43,7 @@ Set these in `backend/.env` (see `backend/.env.example`):
 |---|---|
 | `PROJECT_ENDPOINT` | Foundry project endpoint |
 | `AGENT_NAME` | Name of the deployed agent |
+| `MODEL_DEPLOYMENT_NAME` | Foundry model deployment used by the agent, default `gpt-5` |
 | `ENVIRONMENT` | `development` uses `DefaultAzureCredential` (az login); `production` uses `ManagedIdentityCredential` |
 | `AZURE_CLIENT_ID` | User-assigned managed identity client ID (production only, optional) |
 | `MAX_FILE_SIZE_MB` | Max upload size, default 25 |
@@ -52,4 +53,6 @@ Set these in `backend/.env` (see `backend/.env.example`):
 | `REMEDIATOR_TIMEOUT_SECONDS` | Remediator request timeout, default 120 seconds |
 | `REMEDIATOR_MAX_FILE_SIZE_MB` | Remediation upload limit, default 20 MB |
 
-In production, grant the app's managed identity the appropriate RBAC role on the Foundry project instead of relying on `DefaultAzureCredential`.
+The desired prompt-agent definition is versioned in `foundry/ADAAccessibilityCheckerAgent.json`. The authoritative 32-rule policy is `backend/app/config.py:AUDIT_PROMPT` and is included with every audit request.
+
+In production, grant the app's managed identity the `Foundry User` role on the Foundry project instead of relying on `DefaultAzureCredential`.

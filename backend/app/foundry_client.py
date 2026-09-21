@@ -39,7 +39,6 @@ class FoundryAgentClient:
     def __init__(self):
         self._project_client: AIProjectClient | None = None
         self._openai_client = None
-        self._agent_id: str | None = None
 
     @property
     def project_client(self) -> AIProjectClient:
@@ -53,30 +52,15 @@ class FoundryAgentClient:
     @property
     def openai_client(self):
         if self._openai_client is None:
-            self._openai_client = self.project_client.get_openai_client(
-                api_version=config.OPENAI_API_VERSION
-            )
+            self._openai_client = self.project_client.get_openai_client()
         return self._openai_client
 
-    def _resolve_agent_id(self) -> str:
-        if self._agent_id:
-            return self._agent_id
-        agents_client = self.project_client.agents
-        for agent in agents_client.list_agents():
-            if agent.name == config.AGENT_NAME:
-                self._agent_id = agent.id
-                return self._agent_id
-        raise AgentAuditError(
-            f"Agent '{config.AGENT_NAME}' was not found in the Foundry project."
-        )
-
-    def _audit_with_responses_api(self, agent, file_path: str, original_filename: str):
+    def _audit_with_responses_api(self, file_path: str, original_filename: str):
         with open(file_path, "rb") as pdf_file:
             encoded_pdf = base64.b64encode(pdf_file.read()).decode("ascii")
 
         return self.openai_client.responses.create(
-            model=agent.model,
-            instructions=agent.instructions or None,
+            model=config.MODEL_DEPLOYMENT_NAME,
             input=[
                 {
                     "role": "user",
@@ -96,15 +80,16 @@ class FoundryAgentClient:
                     ],
                 }
             ],
+            extra_body={
+                "agent_reference": {
+                    "name": config.AGENT_NAME,
+                    "type": "agent_reference",
+                }
+            },
         )
 
     def audit_pdf(self, file_path: str, original_filename: str) -> AuditResult:
-        agents_client = self.project_client.agents
-        agent_id = self._resolve_agent_id()
-        agent = agents_client.get_agent(agent_id)
-
         response = self._audit_with_responses_api(
-            agent,
             file_path,
             original_filename,
         )

@@ -10,9 +10,10 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 # Microsoft Foundry project connection
 PROJECT_ENDPOINT = os.getenv(
     "PROJECT_ENDPOINT",
-    "https://adaaccessibilitychecker-resource.services.ai.azure.com/api/projects/adaaccessibilitychecker",
+  "https://aifproject-ladbs-pdfrem-resource.services.ai.azure.com/api/projects/aifproject-ladbs-pdfremed-001",
 )
 AGENT_NAME = os.getenv("AGENT_NAME", "ADAAccessibilityCheckerAgent")
+MODEL_DEPLOYMENT_NAME = os.getenv("MODEL_DEPLOYMENT_NAME", "gpt-5")
 OPENAI_API_VERSION = os.getenv("OPENAI_API_VERSION", "2025-04-01-preview")
 
 # Upload constraints
@@ -216,7 +217,10 @@ The old shortcut "trigger absent ⇒ Passed" is retired for content-triggered ru
 
 **Standards Applied:** WCAG 2.1 Level A and Level AA, based on the static W3C Recommendation dated June 5, 2018; DOJ Title II requirements under 28 CFR Part 35; and the six WCAG 2.2 Level A and AA criteria applied as voluntary new-development targets. Level AAA and the remaining WCAG 2.2 criteria are excluded from the compliance baseline.
 
-**Summary table** — | Rule | Severity | Status |
+**Summary table** — render this as a valid GitHub Markdown pipe table with a header row, separator row, and exactly 32 data rows. Do not render the rows as bullets or plain text.
+
+| Rule | Severity | Status |
+|---|---|---|
 
 ### ACCESSIBILITY CHECKER TREE — always first, mirrors the Acrobat Full Check panel
 
