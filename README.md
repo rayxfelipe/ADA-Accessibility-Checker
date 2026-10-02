@@ -3,6 +3,38 @@ An AI-powered solution that audits PDF documents for ADA (Americans with Disabil
 
 The app uploads a PDF, sends it to a Microsoft Foundry agent (`ADAAccessibilityCheckerAgent`), and renders the agent's accessibility audit in the browser.
 
+## Repository ownership and upstream model
+
+This repository is the maintained LADBS fork of [`snikjou/ADA-Accessibility-Checker`](https://github.com/snikjou/ADA-Accessibility-Checker). The fork provides developer and release independence from the upstream repository while retaining the ability to adopt Said's checker improvements deliberately.
+
+Upstream changes are not production-ready merely because they land on Said's `main` branch. The release process is:
+
+1. Fetch and review changes from the upstream `main` branch.
+2. Integrate selected changes into this fork without discarding LADBS integration work.
+3. Run checker regression tests.
+4. Run the cross-repository JSON contract tests against [`rayxfelipe/PDF-ADA-Remediator`](https://github.com/rayxfelipe/PDF-ADA-Remediator).
+5. Validate the complete checker, remediation, download, and remediated-PDF recheck workflow.
+6. Promote only the reviewed and validated fork commit as production-ready.
+7. Deploy an immutable image built from that approved commit.
+
+The upstream repository is therefore a source of checker improvements, not the production deployment source.
+
+## Two-repository architecture
+
+The customer-facing workflow consists of two independently maintained applications:
+
+1. This checker fork owns the frontend, Microsoft Foundry audit, compliance report, structured findings, remediation JSON generation, and post-remediation recheck experience.
+2. [`PDF-ADA-Remediator`](https://github.com/rayxfelipe/PDF-ADA-Remediator) receives the original PDF and checker-generated JSON, applies only supported deterministic changes, and returns a new PDF without overwriting the source.
+
+```text
+Browser -> ADA Checker fork -> Microsoft Foundry audit
+        -> versioned remediation JSON + original PDF
+        -> PDF ADA Remediator -> remediated PDF
+        -> ADA Checker fork recheck and comparison
+```
+
+The JSON contract is the integration boundary. Neither repository should depend on the other application's presentation or internal implementation.
+
 ## Project structure
 
 ```
@@ -62,3 +94,5 @@ In production, grant the app's managed identity the `Foundry User` role on the F
 The checker emits a version 2 remediation JSON envelope containing structured assessment metadata and the original Markdown report. The structured assessment supplies standards, evidence tier, checker version, summary counts, and stable rule identifiers for the UI. The Markdown field remains present so deployed remediator versions that support the original contract continue to work.
 
 Overview counts are derived from the same structured findings rendered by the dashboard. When a remediated PDF is checked immediately after its original in the same browser session, the dashboard compares rule statuses by stable identifier and distinguishes changed assessment evidence from a demonstrated PDF regression.
+
+The remediation JSON identifies findings and recommended actions, but it is not authorization to invent document meaning. The remediator applies only changes it can make reliably; semantic structure, reading order, alternate-text authorship, and other judgment-dependent work may remain unresolved for a qualified accessibility specialist.
