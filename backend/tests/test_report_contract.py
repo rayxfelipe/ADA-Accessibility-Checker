@@ -47,6 +47,27 @@ class ReportContractTests(unittest.TestCase):
         self.assertEqual(assessment["standardsApplied"], config.STANDARDS_APPLIED)
         self.assertIn("configured audit baseline", assessment["warnings"][0])
 
+    def test_assigns_canonical_ids_when_agent_omits_them(self):
+        report = "\n".join(
+            [
+                "Standards Applied: WCAG 2.1 A and AA",
+                "| Rule | Severity | Status |",
+                "|---|---|---|",
+                "| Character encoding (Unicode-mapped) | — | Failed |",
+                "| List items (LI direct child of L) | Major | Failed |",
+                "| Lbl and LBody (LI contains only Lbl and LBody) | Major | Failed |",
+            ]
+        )
+
+        assessment = parse_assessment(report)
+
+        self.assertEqual(
+            [finding["ruleId"] for finding in assessment["findings"]],
+            ["P4", "L1", "L2"],
+        )
+        self.assertEqual(assessment["findings"][0]["severity"], "Critical")
+        self.assertNotIn("no stable identifier", " ".join(assessment["warnings"]))
+
 
 if __name__ == "__main__":
     unittest.main()

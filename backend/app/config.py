@@ -180,7 +180,7 @@ Use these exact display names and this exact order in the output tree. Internal 
 
 **Headings** — H1 Appropriate nesting (starts at H1, descends one level, no styling-only headings)
 
-**Severity** (failures table only, never shown in the tree) — Blocker: D1, D2, D3, P1 · Critical: D5, P3, A1, T1–T4, H1 · Major: D6, P2, P9, F1, F2, A2–A5, L1, L2 · Minor: D7, T5
+**Severity** (failures table only, never shown in the tree) — Blocker: D1, D2, D3, P1 · Critical: D5, P3, P4, A1, T1–T4, H1 · Major: D6, P2, P9, F1, F2, A2–A5, L1, L2 · Minor: D7, T5
 
 ### Rule applicability map — apply before assigning any status
 
