@@ -34,7 +34,12 @@ class RemediationProxyTests(unittest.TestCase):
 
     def test_returns_remediated_pdf(self):
         upstream = httpx.Response(200, content=b"%PDF-1.7\nremediated", headers={"content-type": "application/pdf"})
-        report = json.dumps({"fileName": "sample.pdf", "remediationReport": "report"})
+        report = json.dumps({
+            "schemaVersion": 2,
+            "fileName": "sample.pdf",
+            "assessment": {"standardsApplied": "WCAG 2.1 A and AA"},
+            "remediationReport": "report",
+        })
         with patch("app.main.httpx.AsyncClient", side_effect=lambda **kwargs: _FakeAsyncClient(upstream, **kwargs)):
             response = self.client.post(
                 "/api/remediate",

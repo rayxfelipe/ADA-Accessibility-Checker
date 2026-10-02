@@ -56,3 +56,9 @@ Set these in `backend/.env` (see `backend/.env.example`):
 The desired prompt-agent definition is versioned in `foundry/ADAAccessibilityCheckerAgent.json`. The authoritative 32-rule policy is `backend/app/config.py:AUDIT_PROMPT` and is included with every audit request.
 
 In production, grant the app's managed identity the `Foundry User` role on the Foundry project instead of relying on `DefaultAzureCredential`.
+
+## Checker-remediator contract
+
+The checker emits a version 2 remediation JSON envelope containing structured assessment metadata and the original Markdown report. The structured assessment supplies standards, evidence tier, checker version, summary counts, and stable rule identifiers for the UI. The Markdown field remains present so deployed remediator versions that support the original contract continue to work.
+
+Overview counts are derived from the same structured findings rendered by the dashboard. When a remediated PDF is checked immediately after its original in the same browser session, the dashboard compares rule statuses by stable identifier and distinguishes changed assessment evidence from a demonstrated PDF regression.

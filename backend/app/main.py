@@ -6,6 +6,7 @@ import tempfile
 import threading
 import uuid
 from pathlib import Path
+from typing import Any
 from urllib.parse import quote
 
 import httpx
@@ -16,11 +17,12 @@ from fastapi.staticfiles import StaticFiles
 
 from . import config
 from .foundry_client import AgentAuditError, foundry_agent_client
+from .report_contract import parse_assessment
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ada_checker.main")
 
-app = FastAPI(title="ADA Accessibility Checker", version="1.0.0")
+app = FastAPI(title="ADA Accessibility Checker", version=config.CHECKER_VERSION)
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,11 +32,11 @@ app.add_middleware(
 )
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"
-audit_jobs: dict[str, dict[str, str]] = {}
+audit_jobs: dict[str, dict[str, Any]] = {}
 audit_jobs_lock = threading.Lock()
 
 
-def _update_audit_job(job_id: str, **values: str) -> None:
+def _update_audit_job(job_id: str, **values: Any) -> None:
     with audit_jobs_lock:
         audit_jobs[job_id].update(values)
 
@@ -49,6 +51,7 @@ def _run_audit_job(job_id: str, file_path: str, filename: str) -> None:
             threadId=result.thread_id,
             runId=result.run_id,
             report=result.response_text,
+            assessment=parse_assessment(result.response_text),
         )
     except AgentAuditError as exc:
         logger.error("Agent audit failed: %s", exc)
@@ -131,7 +134,12 @@ async def remediate_pdf(
         report = json.loads(remediation_report)
     except json.JSONDecodeError as exc:
         raise HTTPException(status_code=400, detail="The remediation report is not valid JSON.") from exc
-    if not isinstance(report, dict) or report.get("fileName") != filename or not isinstance(report.get("remediationReport"), str):
+    if (
+        not isinstance(report, dict)
+        or report.get("fileName") != filename
+        or not isinstance(report.get("remediationReport"), str)
+        or report.get("schemaVersion", 1) not in {1, 2}
+    ):
         raise HTTPException(status_code=400, detail="The remediation report does not match the uploaded PDF.")
 
     headers = {}

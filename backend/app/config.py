@@ -15,6 +15,14 @@ PROJECT_ENDPOINT = os.getenv(
 AGENT_NAME = os.getenv("AGENT_NAME", "ADAAccessibilityCheckerAgent")
 MODEL_DEPLOYMENT_NAME = os.getenv("MODEL_DEPLOYMENT_NAME", "gpt-5")
 OPENAI_API_VERSION = os.getenv("OPENAI_API_VERSION", "2025-04-01-preview")
+CHECKER_VERSION = "1.1.0"
+EXPECTED_RULE_COUNT = 32
+STANDARDS_APPLIED = (
+    "WCAG 2.1 Level A and Level AA, based on the static W3C Recommendation dated "
+    "June 5, 2018; DOJ Title II requirements under 28 CFR Part 35; and the six "
+    "WCAG 2.2 Level A and AA criteria applied as voluntary new-development targets. "
+    "Level AAA and the remaining WCAG 2.2 criteria are excluded from the compliance baseline."
+)
 
 # Upload constraints
 MAX_FILE_SIZE_MB = int(os.getenv("MAX_FILE_SIZE_MB", "25"))

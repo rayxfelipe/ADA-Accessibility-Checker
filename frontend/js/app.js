@@ -11,6 +11,8 @@
   const reportFileNameEl = document.getElementById("report-file-name");
   const reportKpisEl = document.getElementById("report-kpis");
   const reportSummaryEl = document.getElementById("report-summary");
+  const comparisonSection = document.getElementById("audit-comparison");
+  const comparisonOutputEl = document.getElementById("comparison-output");
   const checkerOutputEl = document.getElementById("checker-output");
   const failuresOutputEl = document.getElementById("failures-output");
   const manualOutputEl = document.getElementById("manual-output");
@@ -23,7 +25,10 @@
   const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
   const DEFAULT_SUBMIT_LABEL = "Run Accessibility Audit";
   let selectedFile = null;
+  let lastAuditedFile = null;
   let lastReportText = "";
+  let lastAssessment = null;
+  let lastAuditedFileName = "";
 
   function showError(message) {
     errorMessageEl.textContent = message;
@@ -183,7 +188,7 @@
 
   function getField(report, label) {
     const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const match = report.match(new RegExp(`^\\*\\*${escapedLabel}:\\*\\*\\s*(.+)$`, "im"));
+    const match = report.match(new RegExp(`^(?:\\*\\*)?${escapedLabel}:(?:\\*\\*)?\\s*(.+)$`, "im"));
     return match ? match[1].trim() : "Not reported";
   }
 
@@ -252,18 +257,53 @@
       </article>`).join("");
   }
 
-  function renderDashboard(report) {
-    const standards = getField(report, "Standards Applied");
-    const rows = findSummaryRows(report);
-    const count = (value) => rows.filter((row) => row.status.includes("Failed") && row.severity.includes(value)).length;
-    const manualCount = rows.filter((row) => row.status.includes("Needs manual check")).length;
-    const passedCount = rows.filter((row) => row.status.includes("Passed")).length;
+  function renderComparison(previous, current, previousFileName, currentFileName) {
+    comparisonSection.hidden = true;
+    comparisonOutputEl.innerHTML = "";
+    if (!previous || !current) return;
+
+    const previousStem = previousFileName.replace(/\.pdf$/i, "");
+    const currentStem = currentFileName.replace(/\.pdf$/i, "").replace(/_remediated$/i, "");
+    if (!previousStem || previousStem !== currentStem) return;
+
+    const previousById = new Map(previous.findings.map((finding) => [finding.ruleId, finding]));
+    const changes = current.findings
+      .filter((finding) => previousById.has(finding.ruleId))
+      .map((finding) => ({ before: previousById.get(finding.ruleId), after: finding }))
+      .filter(({ before, after }) => before.status !== after.status);
+    const rows = changes.map(({ before, after }) => `
+      <tr>
+        <td data-label="Rule">${escapeHtml(after.ruleId)} ${escapeHtml(after.requirement)}</td>
+        <td data-label="Before">${formatInline(before.statusLabel)}</td>
+        <td data-label="After">${formatInline(after.statusLabel)}</td>
+      </tr>`).join("");
+
+    comparisonOutputEl.innerHTML = changes.length
+      ? `<p>${changes.length} rule result(s) changed. A changed checker result shows that the assessment evidence changed; by itself it does not prove that remediation introduced a PDF regression.</p>
+         <div class="report-table"><table><thead><tr><th scope="col">Rule</th><th scope="col">Before</th><th scope="col">After</th></tr></thead><tbody>${rows}</tbody></table></div>`
+      : "<p>No rule statuses changed between the original and remediated checks.</p>";
+    comparisonSection.hidden = false;
+  }
+
+  function renderDashboard(report, assessment, previousAssessment, previousFileName, currentFileName) {
+    const standards = assessment?.standardsApplied || getField(report, "Standards Applied");
+    const findings = assessment?.findings || findSummaryRows(report).map((row) => ({
+      severity: row.severity,
+      status: row.status.includes("Failed") ? "fail" : row.status.includes("Passed") ? "pass" : "manual",
+    }));
+    const summary = assessment?.summary || {
+      pass: findings.filter((finding) => finding.status === "pass").length,
+      manual: findings.filter((finding) => finding.status === "manual").length,
+    };
+    const count = (value) => findings.filter(
+      (finding) => finding.status === "fail" && finding.severity.includes(value)
+    ).length;
     const metrics = [
       [count("Blocker"), "Blocker", "critical"],
       [count("Critical"), "Critical", "serious"],
       [count("Major"), "Major", "moderate"],
-      [manualCount, "Manual checks", "review"],
-      [passedCount, "Passed", "minor"],
+      [summary.manual || 0, "Manual checks", "review"],
+      [summary.pass || 0, "Passed", "minor"],
     ];
 
     reportKpisEl.innerHTML = metrics.map(([value, label, style]) => `
@@ -271,6 +311,8 @@
     reportSummaryEl.innerHTML = `
       <dl class="audit-metadata">
         <div><dt>Standards applied</dt><dd>${formatInline(standards)}</dd></div>
+        <div><dt>Evidence tier</dt><dd>${escapeHtml(assessment?.evidenceTier || "Not reported")}</dd></div>
+        <div><dt>Checker version</dt><dd>${escapeHtml(assessment?.checkerVersion || "Not reported")}</dd></div>
       </dl>`;
 
     const tree = getSection(report, "ACCESSIBILITY CHECKER TREE(?:\\s+—.*)?", "Failures table");
@@ -279,6 +321,16 @@
     checkerOutputEl.innerHTML = renderCheckerTree(tree || "Checker tree was not returned.");
     failuresOutputEl.innerHTML = failures ? renderMarkdown(failures) : '<p class="empty-state">No failed rules were reported.</p>';
     manualOutputEl.innerHTML = manual ? renderMarkdown(manual) : '<p class="empty-state">No manual verification items were reported.</p>';
+    renderComparison(previousAssessment, assessment, previousFileName, currentFileName);
+  }
+
+  function remediationPayload(fileName) {
+    return {
+      schemaVersion: 2,
+      fileName,
+      assessment: lastAssessment,
+      remediationReport: lastReportText,
+    };
   }
 
   async function readResponse(response, fallbackMessage) {
@@ -325,9 +377,20 @@
       let data = await readResponse(response, "The audit request failed");
       if (response.status === 202 && data.jobId) data = await waitForAudit(data.jobId);
 
+      const previousAssessment = lastAssessment;
+      const previousFileName = lastAuditedFileName;
+      lastAuditedFile = auditedFile;
       lastReportText = data.report || "No audit result was returned.";
-      reportFileNameEl.textContent = data.filename || auditedFile.name;
-      renderDashboard(lastReportText);
+      lastAssessment = data.assessment || null;
+      lastAuditedFileName = data.filename || auditedFile.name;
+      reportFileNameEl.textContent = lastAuditedFileName;
+      renderDashboard(
+        lastReportText,
+        lastAssessment,
+        previousAssessment,
+        previousFileName,
+        lastAuditedFileName
+      );
       resultsSection.hidden = false;
       resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
@@ -362,10 +425,7 @@
 
     const auditedFileName = reportFileNameEl.textContent.trim() || "accessibility-audit";
     const downloadName = `${auditedFileName.replace(/\.pdf$/i, "")}-remediation.json`;
-    const remediationJson = JSON.stringify({
-      fileName: auditedFileName,
-      remediationReport: lastReportText,
-    }, null, 2);
+    const remediationJson = JSON.stringify(remediationPayload(auditedFileName), null, 2);
     const downloadUrl = URL.createObjectURL(new Blob([remediationJson], { type: "application/json" }));
     const downloadLink = document.createElement("a");
     downloadLink.href = downloadUrl;
@@ -375,18 +435,15 @@
   });
 
   performRemediationBtn.addEventListener("click", async () => {
-    if (!selectedFile || !lastReportText) return;
+    if (!lastAuditedFile || !lastReportText) return;
     const consented = window.confirm(
       "The original PDF and its audit report will be sent to the PDF remediation service. Continue?"
     );
     if (!consented) return;
 
-    const remediationReport = JSON.stringify({
-      fileName: selectedFile.name,
-      remediationReport: lastReportText,
-    });
+    const remediationReport = JSON.stringify(remediationPayload(lastAuditedFileName));
     const formData = new FormData();
-    formData.append("file", selectedFile);
+    formData.append("file", lastAuditedFile);
     formData.append("remediation_report", remediationReport);
 
     clearError();
@@ -408,7 +465,7 @@
       const downloadUrl = URL.createObjectURL(output);
       const downloadLink = document.createElement("a");
       downloadLink.href = downloadUrl;
-      downloadLink.download = `${selectedFile.name.replace(/\.pdf$/i, "")}_remediated.pdf`;
+      downloadLink.download = `${lastAuditedFileName.replace(/\.pdf$/i, "")}_remediated.pdf`;
       downloadLink.click();
       URL.revokeObjectURL(downloadUrl);
       remediationStatusEl.textContent = "Remediation complete. The remediated PDF has been downloaded.";
