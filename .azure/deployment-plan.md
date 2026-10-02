@@ -8,7 +8,7 @@ Generated: 2026-10-01T22:25:00-07:00
 
 ## 1. Project Overview
 
-**Goal:** Deploy the customer-feedback fixes in checker commit `2f7ad73` and remediator commit `5405c2a` to the existing connected ADA Checker and PDF Remediator POC.
+**Goal:** Deploy the T007 evidence-validation fix in checker commit `a104e66` while retaining remediator commit `5405c2a` in the existing connected ADA Checker and PDF Remediator POC.
 
 **Path:** Modify existing Azure deployment
 
@@ -35,7 +35,7 @@ Generated: 2026-10-01T22:25:00-07:00
 
 | Component | Type | Technology | Source |
 |-----------|------|------------|--------|
-| ADA Accessibility Checker | Frontend and API | FastAPI, static HTML/CSS/JavaScript, Microsoft Foundry | `rayxfelipe/ADA-Accessibility-Checker`, commit `2f7ad73` |
+| ADA Accessibility Checker | Frontend and API | FastAPI, static HTML/CSS/JavaScript, Microsoft Foundry | `rayxfelipe/ADA-Accessibility-Checker`, commit `a104e66` |
 | PDF ADA Remediator | API and legacy local workflow | Python 3.12, `pypdf` | `rayxfelipe/PDF-ADA-Remediator`, commit `5405c2a` |
 | Checker container | Linux container | `Dockerfile.azure` | Checker repository root |
 | Remediator container | Linux container | `Dockerfile.azure` | Remediator repository root |
@@ -58,7 +58,7 @@ Generated: 2026-10-01T22:25:00-07:00
 
 **Planned images:**
 
-- `crpdfadastaging33f3.azurecr.io/ada-accessibility-checker:2f7ad73`
+- `crpdfadastaging33f3.azurecr.io/ada-accessibility-checker:a104e66`
 - `crpdfadastaging33f3.azurecr.io/pdf-ada-remediator:5405c2a`
 
 **Rollback images:**
@@ -122,7 +122,7 @@ Preparation evidence collected before Azure validation:
 
 | Check | Result |
 |-------|--------|
-| Checker automated tests | Pass: 9 tests |
+| Checker automated tests | Pass: 13 tests |
 | Checker Python compilation | Pass |
 | Checker browser validation | Pass: structured standards, counts, evidence tier, checker version, and rule-level comparison rendered without page errors |
 | Audited-file binding | Pass: remediation remained bound to the PDF that produced the displayed report |
@@ -135,7 +135,7 @@ Preparation evidence collected before Azure validation:
 
 | Application | ACR run | Immutable image | Digest | Result |
 |-------------|---------|-----------------|--------|--------|
-| Checker | `ccd` | `ada-accessibility-checker:2f7ad73` | `sha256:1340c9b6a109d3b010e4fed2211514b199d336443d5785ef30e7f236875a25cf` | Succeeded |
+| Checker | `cce` | `ada-accessibility-checker:a104e66` | `sha256:275a1030327031eba8d560f7a35c0b2cd1f95adab162c2aa008c1a2d610ad745` | Succeeded |
 | Remediator | `ccc` | `pdf-ada-remediator:5405c2a` | `sha256:e9e559566221a57a19f925fb3dc81d1e0896bffdec4f64ed67d38c70b53bcff5` | Succeeded |
 
 ### Azure validation evidence
@@ -157,6 +157,11 @@ Preparation evidence collected before Azure validation:
 | Post-deploy diagnostics and policy | Diagnostic-setting and policy-state queries | Pass: both apps send seven log categories and metrics to Log Analytics; no noncompliant policy state remains for either app | 2026-10-01T23:55:00-07:00 |
 | Checker-to-remediator smoke test | Live contract-v2 remediation request through the checker | Pass: authenticated proxy returned a valid remediated PDF with HTTP 200 | 2026-10-01T23:57:00-07:00 |
 | Foundry audit and recheck | Live text-bearing PDF audit, remediation, and remediated-PDF audit | Pass: original and remediated audits completed with 32 findings, 32 canonical rule IDs, and reported standards | 2026-10-01T23:59:00-07:00 |
+| T007 corrective image | ACR run `cce` and manifest query | Pass: `a104e66` resolves to `sha256:275a1030327031eba8d560f7a35c0b2cd1f95adab162c2aa008c1a2d610ad745` | 2026-10-02T12:08:29-07:00 |
+| T007 core deployment validation | `validate-deployment.ps1 -Scope sub -Location westus2 -Template .\infra\poc\main.bicep ...` | Pass: CLI, authentication, Bicep compilation, subscription validation, and what-if; existing 13-create, 24-modify, 12-delete drift confirms image-only deployment | 2026-10-02T12:11:00-07:00 |
+| T007 release policy, RBAC, and health | Target policy-state, managed-identity role, and HTTPS health queries | Pass: no target policy noncompliance; required roles retained; checker and remediator returned HTTP 200 | 2026-10-02T12:11:00-07:00 |
+| T007 deployed checker | Exact App Service image, state, RBAC, policy, and diagnostic-setting queries | Pass: checker runs `a104e66`, is healthy, retains required roles, has no policy noncompliance, and sends seven log categories plus metrics to Log Analytics | 2026-10-02T12:21:00-07:00 |
+| T007 live regression | Exact `T00700020111.PDF` audit, remediation, and recheck | Pass: before and after both reported 17 Passed, 12 Failed, 2 Manual, and 1 Skipped; zero rule changes; A5 remained Passed | 2026-10-02T12:20:00-07:00 |
 
 ---
 
@@ -226,3 +231,19 @@ Rollback changes only container image references. It does not delete or modify r
 ## 10. Approval Boundary
 
 The user gave final deployment approval on 2026-10-01 after the updated checker image digest and validation requirements were explained. The approved rollout changed only the two App Service image references and added policy-required diagnostic settings; it did not apply the drifted Bicep stack.
+
+---
+
+## 11. T007 Evidence-Validation Release
+
+The user approved this corrective checker-only release on 2026-10-02 after a live T007 audit changed A5 from Passed to Failed without identifying a formula, link, multimedia object, positive count, or located defect.
+
+- [x] Reproduce the unsupported A5 transition with `T00700020111.PDF`
+- [x] Add evidence validation and one corrective Foundry retry
+- [x] Persist comparison baselines across browser windows
+- [x] Pass 13 backend tests and browser validation
+- [x] Build immutable checker image `a104e66`
+- [x] Validate image manifest, Azure configuration, policy, RBAC, and live health
+- [x] Deploy checker image `a104e66`
+- [x] Verify health and the T007 audit-remediation-recheck workflow
+- [x] Record deployment evidence and restore plan status to `Deployed`
