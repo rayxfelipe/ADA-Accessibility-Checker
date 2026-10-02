@@ -56,6 +56,8 @@ RULE_SEVERITIES = {
     **{rule_id: "Minor" for rule_id in ("D7", "T5")},
 }
 
+STRICT_EVIDENCE_RULE_IDS = {"A5"}
+
 
 def _field(report: str, label: str) -> str | None:
     escaped = re.escape(label)
@@ -97,6 +99,35 @@ def _summary_rows(report: str) -> list[list[str]]:
     return []
 
 
+def _failure_rows(report: str) -> list[list[str]]:
+    lines = report.splitlines()
+    expected_headers = [
+        "rule",
+        "severity",
+        "pages",
+        "count",
+        "tag path/object",
+        "wcag / best practice",
+        "remediation",
+    ]
+    for index in range(len(lines) - 1):
+        headers = _table_cells(lines[index])
+        if (
+            [header.lower() for header in headers] != expected_headers
+            or not _is_divider(lines[index + 1])
+        ):
+            continue
+        rows = []
+        for line in lines[index + 2:]:
+            if not line.strip().startswith("|"):
+                break
+            cells = _table_cells(line)
+            if len(cells) == len(expected_headers):
+                rows.append(cells)
+        return rows
+    return []
+
+
 def _evidence_tier(report: str) -> str:
     match = re.search(
         r"\bEvidence tier(?: reached)?\s*:\s*(Tier\s+[ABC](?:\s*[—-]\s*[^·\n]+)?)",
@@ -115,6 +146,46 @@ def _canonical_rule(rule: str) -> tuple[str, str]:
         if normalized == canonical or normalized.startswith(f"{canonical} "):
             return rule_id, candidate
     return (explicit_id.group(1), candidate) if explicit_id else ("", candidate)
+
+
+def validate_assessment(report: str, assessment: dict[str, Any]) -> list[str]:
+    """Return contract errors that make an assessment unsafe to display."""
+    errors = []
+    findings = assessment.get("findings", [])
+    if len(findings) != config.EXPECTED_RULE_COUNT:
+        errors.append(
+            f"Expected {config.EXPECTED_RULE_COUNT} rule rows but found {len(findings)}."
+        )
+
+    rule_ids = [finding.get("ruleId") for finding in findings]
+    if any(not rule_id for rule_id in rule_ids):
+        errors.append("Every finding must have a stable rule identifier.")
+    if len(set(rule_ids)) != len(rule_ids):
+        errors.append("Finding rule identifiers must be unique.")
+
+    failure_evidence = {}
+    for rule, _severity, pages, count, location, _standard, _remediation in _failure_rows(report):
+        rule_id, _requirement = _canonical_rule(rule)
+        if rule_id:
+            failure_evidence[rule_id] = (pages, count, location)
+
+    for finding in findings:
+        rule_id = finding.get("ruleId")
+        if finding.get("status") != "fail" or rule_id not in STRICT_EVIDENCE_RULE_IDS:
+            continue
+        evidence = failure_evidence.get(rule_id)
+        if evidence is None:
+            errors.append(f"{rule_id} is Failed without a failures-table evidence row.")
+            continue
+        pages, count, location = evidence
+        has_page = bool(re.search(r"\b\d+\b", pages))
+        has_count = bool(re.fullmatch(r"\d+", count)) and int(count) > 0
+        hypothetical = bool(re.search(r"\bif present\b|\bany .+ cannot\b", location, re.IGNORECASE))
+        if not has_page or not has_count or hypothetical:
+            errors.append(
+                f"{rule_id} is Failed without a concrete page, positive count, and located defect."
+            )
+    return errors
 
 
 def parse_assessment(report: str) -> dict[str, Any]:

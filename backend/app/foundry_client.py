@@ -55,7 +55,12 @@ class FoundryAgentClient:
             self._openai_client = self.project_client.get_openai_client()
         return self._openai_client
 
-    def _audit_with_responses_api(self, file_path: str, original_filename: str):
+    def _audit_with_responses_api(
+        self,
+        file_path: str,
+        original_filename: str,
+        correction: str | None = None,
+    ):
         with open(file_path, "rb") as pdf_file:
             encoded_pdf = base64.b64encode(pdf_file.read()).decode("ascii")
 
@@ -75,6 +80,7 @@ class FoundryAgentClient:
                             "text": (
                                 f"{config.AUDIT_PROMPT}\n\n"
                                 f"Document name: {original_filename}"
+                                + (f"\n\nCORRECTIVE RETRY:\n{correction}" if correction else "")
                             ),
                         },
                     ],
@@ -88,10 +94,16 @@ class FoundryAgentClient:
             },
         )
 
-    def audit_pdf(self, file_path: str, original_filename: str) -> AuditResult:
+    def audit_pdf(
+        self,
+        file_path: str,
+        original_filename: str,
+        correction: str | None = None,
+    ) -> AuditResult:
         response = self._audit_with_responses_api(
             file_path,
             original_filename,
+            correction,
         )
         if not response.output_text:
             raise AgentAuditError("The agent did not return a response.")

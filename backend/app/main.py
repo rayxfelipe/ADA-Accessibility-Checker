@@ -17,7 +17,7 @@ from fastapi.staticfiles import StaticFiles
 
 from . import config
 from .foundry_client import AgentAuditError, foundry_agent_client
-from .report_contract import parse_assessment
+from .report_contract import parse_assessment, validate_assessment
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ada_checker.main")
@@ -45,13 +45,36 @@ def _run_audit_job(job_id: str, file_path: str, filename: str) -> None:
     _update_audit_job(job_id, status="running")
     try:
         result = foundry_agent_client.audit_pdf(file_path, filename)
+        assessment = parse_assessment(result.response_text)
+        validation_errors = validate_assessment(result.response_text, assessment)
+        if validation_errors:
+            logger.warning(
+                "Audit contract validation failed; retrying once: %s",
+                "; ".join(validation_errors),
+            )
+            correction = (
+                "The prior response failed contract validation: "
+                + "; ".join(validation_errors)
+                + " Reinspect the attached PDF and regenerate the complete report. "
+                "A content-triggered rule may be Failed only when its failures-table row "
+                "identifies a concrete page, a positive numeric count, and a located defect. "
+                "Do not fail a rule using hypothetical language such as 'if present'."
+            )
+            result = foundry_agent_client.audit_pdf(file_path, filename, correction)
+            assessment = parse_assessment(result.response_text)
+            validation_errors = validate_assessment(result.response_text, assessment)
+        if validation_errors:
+            raise AgentAuditError(
+                "The checker could not produce a consistent evidence-backed assessment. "
+                "Please run the audit again."
+            )
         _update_audit_job(
             job_id,
             status="completed",
             threadId=result.thread_id,
             runId=result.run_id,
             report=result.response_text,
-            assessment=parse_assessment(result.response_text),
+            assessment=assessment,
         )
     except AgentAuditError as exc:
         logger.error("Agent audit failed: %s", exc)

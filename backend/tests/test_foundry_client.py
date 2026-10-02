@@ -32,6 +32,24 @@ class FoundryAgentClientTests(unittest.TestCase):
         self.assertIn(config.AUDIT_PROMPT, request["input"][0]["content"][1]["text"])
         self.assertEqual(result.response_text, "report")
 
+    def test_includes_contract_correction_on_retry(self):
+        client = FoundryAgentClient()
+        create = Mock(return_value=SimpleNamespace(id="response-2", output_text="corrected report"))
+        client._openai_client = SimpleNamespace(responses=SimpleNamespace(create=create))
+
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as pdf_file:
+            pdf_file.write(b"%PDF-1.7\n")
+            pdf_path = pdf_file.name
+
+        try:
+            client.audit_pdf(pdf_path, "sample.pdf", "A5 requires concrete evidence.")
+        finally:
+            Path(pdf_path).unlink(missing_ok=True)
+
+        text = create.call_args.kwargs["input"][0]["content"][1]["text"]
+        self.assertIn("CORRECTIVE RETRY:", text)
+        self.assertIn("A5 requires concrete evidence.", text)
+
 
 if __name__ == "__main__":
     unittest.main()

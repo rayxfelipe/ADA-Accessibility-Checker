@@ -15,7 +15,7 @@ PROJECT_ENDPOINT = os.getenv(
 AGENT_NAME = os.getenv("AGENT_NAME", "ADAAccessibilityCheckerAgent")
 MODEL_DEPLOYMENT_NAME = os.getenv("MODEL_DEPLOYMENT_NAME", "gpt-5")
 OPENAI_API_VERSION = os.getenv("OPENAI_API_VERSION", "2025-04-01-preview")
-CHECKER_VERSION = "1.1.0"
+CHECKER_VERSION = "1.1.1"
 EXPECTED_RULE_COUNT = 32
 STANDARDS_APPLIED = (
     "WCAG 2.1 Level A and Level AA, based on the static W3C Recommendation dated "

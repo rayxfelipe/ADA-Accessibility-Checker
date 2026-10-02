@@ -24,11 +24,40 @@
 
   const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
   const DEFAULT_SUBMIT_LABEL = "Run Accessibility Audit";
+  const COMPARISON_BASELINE_KEY = "ada-checker-comparison-baseline-v1";
   let selectedFile = null;
   let lastAuditedFile = null;
   let lastReportText = "";
   let lastAssessment = null;
   let lastAuditedFileName = "";
+
+  function loadComparisonBaseline() {
+    try {
+      const baseline = JSON.parse(localStorage.getItem(COMPARISON_BASELINE_KEY));
+      if (
+        !baseline
+        || typeof baseline.fileName !== "string"
+        || !Array.isArray(baseline.assessment?.findings)
+      ) return null;
+      return baseline;
+    } catch (error) {
+      console.warn("Stored audit comparison baseline was invalid.", error);
+      localStorage.removeItem(COMPARISON_BASELINE_KEY);
+      return null;
+    }
+  }
+
+  function saveComparisonBaseline(fileName, assessment) {
+    if (!fileName || !Array.isArray(assessment?.findings)) return;
+    try {
+      localStorage.setItem(
+        COMPARISON_BASELINE_KEY,
+        JSON.stringify({ fileName, assessment })
+      );
+    } catch (error) {
+      console.warn("Audit comparison baseline could not be stored.", error);
+    }
+  }
 
   function showError(message) {
     errorMessageEl.textContent = message;
@@ -377,12 +406,14 @@
       let data = await readResponse(response, "The audit request failed");
       if (response.status === 202 && data.jobId) data = await waitForAudit(data.jobId);
 
-      const previousAssessment = lastAssessment;
-      const previousFileName = lastAuditedFileName;
+      const storedBaseline = loadComparisonBaseline();
+      const previousAssessment = lastAssessment || storedBaseline?.assessment || null;
+      const previousFileName = lastAuditedFileName || storedBaseline?.fileName || "";
       lastAuditedFile = auditedFile;
       lastReportText = data.report || "No audit result was returned.";
       lastAssessment = data.assessment || null;
       lastAuditedFileName = data.filename || auditedFile.name;
+      saveComparisonBaseline(lastAuditedFileName, lastAssessment);
       reportFileNameEl.textContent = lastAuditedFileName;
       renderDashboard(
         lastReportText,

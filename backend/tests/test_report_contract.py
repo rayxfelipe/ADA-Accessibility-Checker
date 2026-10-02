@@ -1,7 +1,7 @@
 import unittest
 
 from app import config
-from app.report_contract import parse_assessment
+from app.report_contract import parse_assessment, validate_assessment
 
 
 def _report(standards_line: str) -> str:
@@ -19,6 +19,32 @@ def _report(standards_line: str) -> str:
             standards_line,
             "File name: sample.pdf · Evidence tier: Tier B — content-level inspection",
             *rows,
+        ]
+    )
+
+
+def _complete_report(a5_status: str, a5_evidence: str) -> str:
+    from app.report_contract import RULE_CATALOG
+
+    rows = ["| Rule | Severity | Status |", "|---|---|---|"]
+    for rule_id, requirement in RULE_CATALOG:
+        status = a5_status if rule_id == "A5" else "Passed"
+        rows.append(f"| {rule_id} {requirement} | Major | {status} |")
+    failures = [
+        "| Rule | Severity | Pages | Count | Tag path/object | WCAG / Best Practice | Remediation |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    if a5_status == "Failed":
+        failures.append(
+            f"| A5 Other elements alternate text | Major | 1 | {a5_evidence} | "
+            "page 1 object | WCAG 1.1.1 | Add alternate text |"
+        )
+    return "\n".join(
+        [
+            "Standards Applied: WCAG 2.1 A and AA",
+            *rows,
+            "### Failures table",
+            *failures,
         ]
     )
 
@@ -67,6 +93,21 @@ class ReportContractTests(unittest.TestCase):
         )
         self.assertEqual(assessment["findings"][0]["severity"], "Critical")
         self.assertNotIn("no stable identifier", " ".join(assessment["warnings"]))
+
+    def test_rejects_content_triggered_failure_without_positive_count(self):
+        report = _complete_report("Failed", "—")
+        assessment = parse_assessment(report)
+
+        self.assertIn(
+            "A5 is Failed without a concrete page, positive count, and located defect.",
+            validate_assessment(report, assessment),
+        )
+
+    def test_accepts_content_triggered_failure_with_concrete_evidence(self):
+        report = _complete_report("Failed", "1")
+        assessment = parse_assessment(report)
+
+        self.assertEqual(validate_assessment(report, assessment), [])
 
 
 if __name__ == "__main__":

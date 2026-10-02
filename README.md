@@ -93,6 +93,8 @@ In production, grant the app's managed identity the `Foundry User` role on the F
 
 The checker emits a version 2 remediation JSON envelope containing structured assessment metadata and the original Markdown report. The structured assessment supplies standards, evidence tier, checker version, summary counts, and stable rule identifiers for the UI. The Markdown field remains present so deployed remediator versions that support the original contract continue to work.
 
-Overview counts are derived from the same structured findings rendered by the dashboard. When a remediated PDF is checked immediately after its original in the same browser session, the dashboard compares rule statuses by stable identifier and distinguishes changed assessment evidence from a demonstrated PDF regression.
+Overview counts are derived from the same structured findings rendered by the dashboard. The browser stores the latest structured assessment locally so another window can compare a remediated PDF with its original by stable rule identifier. The comparison distinguishes changed assessment evidence from a demonstrated PDF regression.
+
+Before an assessment is displayed, the backend validates its contract and evidence. Unsupported A5 failures, such as hypothetical references to formulas, links, or multimedia without a concrete page, positive count, and located object, trigger one corrective Foundry retry. If the retry is still inconsistent, the audit fails explicitly rather than presenting an unsupported result.
 
 The remediation JSON identifies findings and recommended actions, but it is not authorization to invent document meaning. The remediator applies only changes it can make reliably; semantic structure, reading order, alternate-text authorship, and other judgment-dependent work may remain unresolved for a qualified accessibility specialist.
